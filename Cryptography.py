@@ -3,27 +3,59 @@ from cryptography.hazmat.primitives.padding import PKCS7
 from cryptography.hazmat.backends import default_backend
 from KeyError import KeyError
 from IVError import IVError
+import os
 import base64
 
 def encryptAESFile(filename,key,mode="ECB",IV="0000000000000000"):
-    chunksize = 64*1024
+    chunksize = 16
     outputFile = "(enc)"+filename
     filesize = str(os.path.getsize(filename)).zfill(16)
     with open(filename, 'rb') as infile:#rb means read in binary
         with open(outputFile, 'wb') as outfile:#wb means write in the binary mode
             if(mode=="CBC"):
                 outfile.write(filesize.encode('utf-8'))
-                outfile.write(IV)
                 while True:
                     chunk = infile.read(chunksize)
-                    outfile.write(encryptAESText(chunk,key,"CBC",IV))
+                    if not chunk:
+                        break  # Break out of the loop when the end of the file is reached
+                    outfile.write(encryptAESText(chunk.replace('\n',''),key,"CBC",IV))
+                    outfile.write(b'\n')
             elif(mode=="ECB"):
                 outfile.write(filesize.encode('utf-8'))
+                outfile.write('\n')
                 while True:
                     chunk = infile.read(chunksize)
-                    outfile.write(encryptAESText(chunk,key))
+                    if not chunk:
+                        break 
+                    outfile.write(encryptAESText(chunk.replace('\n',''),key))
+                    outfile.write('\n')
                 
                     
+def decryptAESFile(filename,key,mode="ECB"):
+    chunksize = 16
+    outputFile = filename.replace('(enc)','')
+    # outputFile = filename.replace('(dec)','')
+    with open(filename, 'rb') as infile:
+        if(mode=="CBC"):
+            filesize = int(infile.read(16))
+            IV = infile.read(16)
+            with open(outputFile, 'wb') as outfile:
+                while True:
+                    chunk = infile.read(chunksize)
+                    if len(chunk) == 0:
+                        break
+                    outfile.write(decryptAESText(chunk,key,"CBC",IV).decode)
+                outfile.truncate(filesize)
+                    
+        elif(mode=="ECB"):
+            filesize = int(infile.read(16))
+            with open(outputFile, 'wb') as outfile:
+                while True:
+                    chunk = infile.read(chunksize)
+                    if len(chunk) == 0:
+                        break
+                    outfile.write(decryptAESText(chunk,key,"ECB"))
+                outfile.truncate(filesize)
 
 
 def encryptAESText(plaintext, key,mode="ECB",IV="0000000000000000"):
@@ -64,9 +96,9 @@ def main():
     print(len(key))
     # plaintext = input("Enter the plaintext: ").encode()
     # # iv= b'\x00' * (algorithms.AES.block_size // 8)
-    # iv=b"0000000000000000"
-    # print(iv)
-    # print(len(iv))
+    iv=b"0000000000000000"
+    print(iv)
+    print(len(iv))
     # enc = encryptAESText(plaintext, key,"CBC",iv)
     # print("The encrypted message is :", enc)
     # dec = decryptAESText(enc, key,"CBC",iv)
@@ -90,7 +122,7 @@ def main():
                 print(encryptAESFile(filename,key))
             elif(choice=="CBC"):
                 IV=input("IV: ").encode()
-                print(encryptAESFile(file,key,"CBC",IV))
+                print(encryptAESFile(filename,key,"CBC",IV))
         print('Done.')
     elif choice == 'D':
         choice = input("Text(T) or File(F) to Decrypt: ")
@@ -107,10 +139,10 @@ def main():
             choice=input("Mode(ECB,CBC): ")
             filename=input("Filename: ")
             if(choice=="ECB"):
-                print(encryptAESFile(filename,key))
+                print(dcryptAESFile(filename,key))
             elif(choice=="CBC"):
                 IV=input("IV: ").encode()
-                print(encryptAESFile(file,key,"CBC",IV))
+                print(decryptAESFile(filename,key,"CBC"))
         print('Done.')
     else:
         print("No option selected, closing...")
