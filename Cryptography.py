@@ -27,6 +27,23 @@ def remove_null_bytes(data):
         return data  # No null bytes, return as is
 
 
+def remove_pkcs7_padding(data):
+    if not data:
+        return b''  # Ensure the data is not empty
+
+    # Get the last byte, which represents the number of padding bytes
+    last_byte = data[-1]
+
+    # Check if the padding is valid
+    if 1 <= last_byte <= len(data):
+        # Check if the last 'last_byte' bytes are equal to the padding value
+        if all(byte == last_byte for byte in data[-last_byte:]):
+            # Remove the padding bytes
+            return data[:-last_byte]
+
+    # If the padding is not valid, return the original data
+    return data
+
 
 def encryptAESFile(filename,key,mode="ECB",IV=b"0000000000000000"):
     # Encrypt a file using AES
@@ -40,9 +57,6 @@ def encryptAESFile(filename,key,mode="ECB",IV=b"0000000000000000"):
                     chunk = infile.read(chunksize)
                     if not chunk:
                         break  # Break out of the loop when the end of the file is reached
-                    # Pad the chunk with null bytes if its length is less than 16
-                    if len(chunk)<16:
-                        chunk=pad_with_null_bytes(chunk,16)
                     temp=encryptAESText(chunk,key,"CBC",IV)
                     outfile.write(temp)
             elif(mode=="ECB"):
@@ -50,17 +64,13 @@ def encryptAESFile(filename,key,mode="ECB",IV=b"0000000000000000"):
                     chunk = infile.read(chunksize)
                     if not chunk:
                         break 
-                    # Pad the chunk with null bytes if its length is less than 16
-                    if len(chunk)<16:
-                        chunk=pad_with_null_bytes(chunk,16)
                     temp=encryptAESText(chunk,key) 
                     outfile.write(temp)
 
 def decryptAESFile(filename,key,mode="ECB"):
     # Decrypt a file using AES
     outputFile = filename.replace('(enc)','')
-    chunksize=32
-    # outputFile = filename.replace('(dec)','')
+    chunksize=16
     with open(filename, 'rb') as infile:
         if(mode=="CBC"):
             with open(outputFile, 'wb') as outfile:
@@ -69,7 +79,6 @@ def decryptAESFile(filename,key,mode="ECB"):
                     if len(chunk) == 0:
                         break
                     temp=decryptAESText(chunk,key,"CBC",IV)
-                    temp=remove_null_bytes(temp)
                     outfile.write(temp)
         elif(mode=="ECB"):
             with open(outputFile, 'wb') as outfile:
@@ -78,11 +87,11 @@ def decryptAESFile(filename,key,mode="ECB"):
                     if len(chunk) == 0:
                         break
                     temp=decryptAESText(chunk,key,"ECB")
-                    temp=remove_null_bytes(temp)
                     outfile.write(temp)
 
 
 def encryptAESText(plaintext, key,mode="ECB",IV=b"0000000000000000"):
+    ciphertext=""
     # Encrypt text using AES
     if(len(key)!=16 and len(key)!=24 and len(key)!=32):
         raise  KeyError("Key must have a fixed size [16,24,32]")
@@ -93,9 +102,13 @@ def encryptAESText(plaintext, key,mode="ECB",IV=b"0000000000000000"):
             raise IVError("IV must be 16 bytes long")
         cipher = Cipher(algorithms.AES(key), modes.CBC(IV), backend=default_backend())
     encryptor = cipher.encryptor()
-    padder = PKCS7(algorithms.AES.block_size).padder()
-    padded_data = padder.update(plaintext) + padder.finalize()
-    ciphertext = encryptor.update(padded_data) + encryptor.finalize()
+    # Pad the chunk with null bytes if its length is less than 16
+    if len(plaintext)<16:
+        padder = PKCS7(algorithms.AES.block_size).padder()
+        padded_data = padder.update(plaintext) + padder.finalize()
+        ciphertext = encryptor.update(padded_data) + encryptor.finalize()
+    else:
+        ciphertext = encryptor.update(plaintext) + encryptor.finalize()
     return ciphertext
 
 def decryptAESText(ciphertext, key,mode="ECB",IV=b"0000000000000000"):
@@ -108,9 +121,8 @@ def decryptAESText(ciphertext, key,mode="ECB",IV=b"0000000000000000"):
             raise IVError("IV must be 16 bytes long")
         cipher = Cipher(algorithms.AES(key), modes.CBC(IV), backend=default_backend())
     decryptor = cipher.decryptor()
-    padded_data = decryptor.update(ciphertext) + decryptor.finalize()
-    unpadder = PKCS7(algorithms.AES.block_size).unpadder()
-    plaintext = unpadder.update(padded_data) + unpadder.finalize()
+    plaintext = decryptor.update(ciphertext) + decryptor.finalize()
+    plaintext=remove_pkcs7_padding(plaintext)
     return plaintext        
 
 def main():
