@@ -8,12 +8,28 @@ import base64
 
 
 IV=b"0000000000000000"
-# values_to_check = [0x10, 0x0F, 0x0E, 0x0D, 0x0C, 0x0B, 0x0A, 0x09, 0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01]
+
+def pad_with_null_bytes(data, target_length):
+    current_length = len(data)
+    padding_size = target_length - current_length
+    padding = b'\x00' * padding_size
+    padded_data = data + padding
+    return padded_data
+
+def remove_null_bytes(data):
+    # Check if null bytes are present
+    if b'\x00' in data:
+        # Remove null bytes
+        data_without_null_bytes = data.replace(b'\x00', b'')
+        return data_without_null_bytes
+    else:
+        return data  # No null bytes, return as is
+
 
 
 def encryptAESFile(filename,key,mode="ECB",IV="0000000000000000"):
     outputFile = "(enc)"+filename
-    chunksize=64*1024
+    chunksize=16
     temp=""
     with open(filename, 'rb') as infile:#rb means read in binary
         with open(outputFile, 'wb') as outfile:#wb means write in the binary mode
@@ -22,6 +38,8 @@ def encryptAESFile(filename,key,mode="ECB",IV="0000000000000000"):
                     chunk = infile.read(chunksize)
                     if not chunk:
                         break  # Break out of the loop when the end of the file is reached
+                    if len(chunk)<16:
+                        chunk=pad_with_null_bytes(chunk,16)
                     temp=encryptAESText(chunk,key,"CBC",IV)
                     outfile.write(temp)
             elif(mode=="ECB"):
@@ -29,11 +47,13 @@ def encryptAESFile(filename,key,mode="ECB",IV="0000000000000000"):
                     chunk = infile.read(chunksize)
                     if not chunk:
                         break 
+                    if len(chunk)<16:
+                        chunk=pad_with_null_bytes(chunk,16)
                     temp=encryptAESText(chunk,key) 
                     outfile.write(temp)
 def decryptAESFile(filename,key,mode="ECB"):
     outputFile = filename.replace('(enc)','')
-    chunksize=64*1024
+    chunksize=32
     # outputFile = filename.replace('(dec)','')
     with open(filename, 'rb') as infile:
         if(mode=="CBC"):
@@ -43,6 +63,7 @@ def decryptAESFile(filename,key,mode="ECB"):
                     if len(chunk) == 0:
                         break
                     temp=decryptAESText(chunk,key,"CBC",IV)
+                    temp=remove_null_bytes(temp)
                     outfile.write(temp)
         elif(mode=="ECB"):
             with open(outputFile, 'wb') as outfile:
@@ -51,6 +72,7 @@ def decryptAESFile(filename,key,mode="ECB"):
                     if len(chunk) == 0:
                         break
                     temp=decryptAESText(chunk,key,"ECB")
+                    temp=remove_null_bytes(temp)
                     outfile.write(temp)
 
 
@@ -67,8 +89,6 @@ def encryptAESText(plaintext, key,mode="ECB",IV="0000000000000000",lastByte=Fals
     padder = PKCS7(algorithms.AES.block_size).padder()
     padded_data = padder.update(plaintext) + padder.finalize()
     ciphertext = encryptor.update(padded_data) + encryptor.finalize()
-    # encodedciphertext = base64.b64encode(ciphertext)
-    # print(len(encodedciphertext))
     return ciphertext
 
 def is_last_byte_contained(data, values):
@@ -89,26 +109,14 @@ def decryptAESText(ciphertext, key,mode="ECB",IV="0000000000000000"):
             raise IVError("IV must be 16 bytes long")
         cipher = Cipher(algorithms.AES(key), modes.CBC(IV), backend=default_backend())
     decryptor = cipher.decryptor()
-    # decodedciphertext = base64.b64decode(ciphertext)
     padded_data = decryptor.update(ciphertext) + decryptor.finalize()
     unpadder = PKCS7(algorithms.AES.block_size).unpadder()
     plaintext = unpadder.update(padded_data) + unpadder.finalize()
-    # print(len(plaintext))
     return plaintext        
 
 def main():
     key=b"PhiloPteer Mohebmmmmmmmmmmmmmmmm"
-    # choice = input("Would you like to (E)encrypt or (D)Decrypt ")
     print(len(key))
-    # plaintext = input("Enter the plaintext: ").encode()
-    # # iv= b'\x00' * (algorithms.AES.block_size // 8)
-    # IV=b"0000000000000000"
-    # print(iv)
-    # print(len(iv))
-    # enc = encryptAESText(plaintext, key,"CBC",iv)
-    # print("The encrypted message is :", enc)
-    # dec = decryptAESText(enc, key,"CBC",iv)
-    # print("The decrypted message is:", dec.decode('utf-8'))
     choice = input("Would you like to (E)encrypt or (D)Decrypt ")
     if choice == 'E':
         choice = input("Text(T) or File(F) to encrypt: ")
