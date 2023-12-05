@@ -1,11 +1,12 @@
 from tkinter import *
+from tkinter import filedialog
 
 root = Tk()
 
 root.title('Crypt-It')
 
 # options frame and its constituents
-options_frame = LabelFrame(root, text="Choose your options:", padx=20, pady=50)
+options_frame = LabelFrame(root, text="Choose your options:", padx=20, pady=56)
 options_frame.grid(row=0, column=0)
 
 options = ["AES", "RSA", "sha512"]
@@ -53,6 +54,19 @@ in_frame.pack(pady=10)
 input_text = Text(in_frame, width=50, height=10)
 input_text.insert(END, "Enter Text")
 input_text.grid(row=0, column=0, pady=5)
+
+
+def open_file():
+    filename = filedialog.askopenfilename(title="Select A File", filetypes=(("text files", "*.txt"),))
+    if filename:
+        with open(filename, 'r', encoding='utf-8') as file:
+            file_content = file.read()
+            input_text.delete("1.0", END)
+            input_text.insert(END, file_content)
+
+
+file_button = Button(in_frame, text="Open File", command=open_file, width=57)
+file_button.grid(row=1, column=0)
 
 # output frame and its constituents
 out_frame = LabelFrame(r_frame, text="OUTPUT TEXT", padx=10, pady=10)
