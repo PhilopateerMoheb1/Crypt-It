@@ -49,24 +49,47 @@ iv_field.grid_forget()
 
 
 def en_aes_text_ecb():
-    plaintext = input_text.get("1.0", END).replace("\n", "")
-    key = key_field.get("1.0", END).replace("\n", "")
-    ciphertext = str(base64.b64encode(encryptAESText(plaintext.encode(), key.encode())))
-    ciphertext = ciphertext.replace("b'", "").replace("'", "")
-    output_text.config(state="normal")
-    output_text.delete("1.0", END)
-    output_text.insert(END, ciphertext)
-    output_text.config(state="disabled")
+    if selected.get() == "AES (ECB)":
+        plaintext = input_text.get("1.0", END).replace("\n", "")
+        key = key_field.get("1.0", END).replace("\n", "")
+        ciphertext = str(base64.b64encode(encryptAESText(plaintext.encode(), key.encode())))
+        ciphertext = ciphertext.replace("b'", "").replace("'", "")
+        output_text.config(state="normal")
+        output_text.delete("1.0", END)
+        output_text.insert(END, ciphertext)
+        output_text.config(state="disabled")
+    elif selected.get() == "AES (CBC)":
+        plaintext = input_text.get("1.0", END).replace("\n", "")
+        key = key_field.get("1.0", END).replace("\n", "")
+        iv = iv_field.get("1.0", END).replace("\n", "")
+        ciphertext = str(base64.b64encode(encryptAESText(plaintext.encode(), key.encode(), "CBC", iv.encode())))
+        ciphertext = ciphertext.replace("b'", "").replace("'", "")
+        output_text.config(state="normal")
+        output_text.delete("1.0", END)
+        output_text.insert(END, ciphertext)
+        output_text.config(state="disabled")
 
 
 def dec_aes_text_ecb():
-    ciphertext = base64.b64decode(input_text.get("1.0", END).replace("\n", ""))
-    key = key_field.get("1.0", END).replace("\n", "")
-    plaintext = decryptAESText(ciphertext, key.encode())
-    output_text.config(state="normal")
-    output_text.delete("1.0", END)
-    output_text.insert(END, plaintext)
-    output_text.config(state="disabled")
+    if selected.get() == "AES (EBC)":
+        ciphertext = base64.b64decode(input_text.get("1.0", END).replace("\n", ""))
+        key = key_field.get("1.0", END).replace("\n", "")
+        plaintext = decryptAESText(ciphertext, key.encode())
+        output_text.config(state="normal")
+        output_text.delete("1.0", END)
+        output_text.insert(END, plaintext)
+        output_text.config(state="disabled")
+    elif selected.get() == "AES (CBC)":
+        ciphertext = base64.b64decode(input_text.get("1.0", END).replace("\n", ""))
+        key = key_field.get("1.0", END).replace("\n", "")
+        iv = iv_field.get("1.0", END).replace("\n", "")
+        plaintext = decryptAESText(ciphertext, key.encode(), "CBC", iv.encode())
+        output_text.config(state="normal")
+        output_text.delete("1.0", END)
+        output_text.insert(END, plaintext)
+        output_text.config(state="disabled")
+
+
 
 
 en_button = Button(options_frame, text="ENCRYPT", pady=10, padx=20, width=22, command=en_aes_text_ecb)
