@@ -49,6 +49,7 @@ def remove_pkcs7_padding(data):
 
 def encryptAESFile(filename, key, mode="ECB", IV=b"0000000000000000"):
     # Encrypt a file using AES
+    outputFile = filename.replace('(dec)', '')
     outputFile = "(enc)" + filename
     chunksize = 16
     temp = ""
@@ -70,9 +71,10 @@ def encryptAESFile(filename, key, mode="ECB", IV=b"0000000000000000"):
                     outfile.write(temp)
 
 
-def decryptAESFile(filename, key, mode="ECB"):
+def decryptAESFile(filename, key, mode="ECB", IV=b"0000000000000000"):
     # Decrypt a file using AES
     outputFile = filename.replace('(enc)', '')
+    outputFile = "(dec)" + outputFile
     chunksize = 16
     with open(filename, 'rb') as infile:
         if (mode == "CBC"):
