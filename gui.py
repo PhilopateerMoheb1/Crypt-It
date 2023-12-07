@@ -48,6 +48,13 @@ iv_field.grid(row=2, column=0, columnspan=10, pady=10)
 iv_field.grid_forget()
 
 
+def find_file_recursive(file_name):
+    for root, dirs, files in os.walk(os.getcwd()):
+        if file_name in files:
+            return os.path.join(root, file_name)
+    return None
+
+
 def en_aes():
     if (selected.get() == "AES (ECB)") & (not file_opened):
         plaintext = input_text.get("1.0", END).replace("\n", "")
@@ -72,18 +79,20 @@ def en_aes():
         filename = os.path.basename(filepath)
         key = key_field.get("1.0", END).replace("\n", "")
         encryptAESFile(filename, key.encode())
+        out_filepath = find_file_recursive("(enc)" + filename)
         output_text.config(state="normal")
         output_text.delete("1.0", END)
-        output_text.insert(END, "done")
+        output_text.insert(END, "Done - Filepath: " + out_filepath)
         output_text.config(state="disabled")
     elif (selected.get() == "AES (CBC)") & file_opened:
         filename = os.path.basename(filepath)
         key = key_field.get("1.0", END).replace("\n", "")
         iv = iv_field.get("1.0", END).replace("\n", "")
         encryptAESFile(filename, key.encode(), "CBC", iv.encode())
+        out_filepath = find_file_recursive("(enc)" + filename)
         output_text.config(state="normal")
         output_text.delete("1.0", END)
-        output_text.insert(END, "done")
+        output_text.insert(END, "Done - Filepath: " + out_filepath)
         output_text.config(state="disabled")
 
 
@@ -109,18 +118,20 @@ def dec_aes():
         filename = os.path.basename(filepath)
         key = key_field.get("1.0", END).replace("\n", "")
         decryptAESFile(filename, key.encode())
+        out_filepath = find_file_recursive("(dec)" + filename)
         output_text.config(state="normal")
         output_text.delete("1.0", END)
-        output_text.insert(END, "done")
+        output_text.insert(END, "Done - Filepath: " + out_filepath)
         output_text.config(state="disabled")
     elif (selected.get() == "AES (CBC)") & file_opened:
         filename = os.path.basename(filepath)
         key = key_field.get("1.0", END).replace("\n", "")
         iv = iv_field.get("1.0", END).replace("\n", "")
         decryptAESFile(filename, key.encode(), "CBC", iv.encode())
+        out_filepath = find_file_recursive("(dec)" + filename.replace("(enc)", ""))
         output_text.config(state="normal")
         output_text.delete("1.0", END)
-        output_text.insert(END, "done")
+        output_text.insert(END, "Done - Filepath: " + out_filepath)
         output_text.config(state="disabled")
 
 
