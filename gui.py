@@ -1,5 +1,7 @@
+import base64
 from tkinter import *
 from tkinter import filedialog
+from Cryptography import *
 
 root = Tk()
 
@@ -9,7 +11,7 @@ root.title('Crypt-It')
 options_frame = LabelFrame(root, text="Choose your options:", padx=20, pady=56)
 options_frame.grid(row=0, column=0)
 
-options = ["AES", "RSA", "sha512"]
+options = ["AES (ECB)", "AES (CBC)", "RSA", "sha512"]
 
 clicked = StringVar()
 clicked.set("Choose Tool")
@@ -17,10 +19,15 @@ clicked.set("Choose Tool")
 
 # show appropriate buttons when an option is selected
 def on_selection(*args):
-    if selected.get() == "AES":
+    if selected.get() == "AES (ECB)":
         key_field.grid(row=1, column=0, columnspan=10, pady=10)
         en_button.grid(row=7, column=0, padx=4)
         dec_button.grid(row=7, column=2, padx=4)
+    elif selected.get() == "AES (CBC)":
+        key_field.grid(row=1, column=0, columnspan=10, pady=10)
+        en_button.grid(row=7, column=0, padx=4)
+        dec_button.grid(row=7, column=2, padx=4)
+        iv_field.grid(row=2, column=0, columnspan=10, pady=10)
 
 
 selected = StringVar(root)
@@ -35,11 +42,104 @@ key_field.insert(END, "Enter Your Key")
 key_field.grid(row=1, column=0, columnspan=10, pady=10)
 key_field.grid_forget()
 
-en_button = Button(options_frame, text="ENCRYPT", pady=10, padx=20, width=22)
+iv_field = Text(options_frame, width=50, height=1)
+iv_field.insert(END, "Enter Your Initialization Vector")
+iv_field.grid(row=2, column=0, columnspan=10, pady=10)
+iv_field.grid_forget()
+
+
+def find_file_recursive(file_name):
+    for root, dirs, files in os.walk(os.getcwd()):
+        if file_name in files:
+            return os.path.join(root, file_name)
+    return None
+
+
+def en_aes():
+    if (selected.get() == "AES (ECB)") & (not file_opened):
+        plaintext = input_text.get("1.0", END).replace("\n", "")
+        key = key_field.get("1.0", END).replace("\n", "")
+        ciphertext = str(base64.b64encode(encryptAESText(plaintext.encode(), key.encode())))
+        ciphertext = ciphertext.replace("b'", "").replace("'", "")
+        output_text.config(state="normal")
+        output_text.delete("1.0", END)
+        output_text.insert(END, ciphertext)
+        output_text.config(state="disabled")
+    elif (selected.get() == "AES (CBC)") & (not file_opened):
+        plaintext = input_text.get("1.0", END).replace("\n", "")
+        key = key_field.get("1.0", END).replace("\n", "")
+        iv = iv_field.get("1.0", END).replace("\n", "")
+        ciphertext = str(base64.b64encode(encryptAESText(plaintext.encode(), key.encode(), "CBC", iv.encode())))
+        ciphertext = ciphertext.replace("b'", "").replace("'", "")
+        output_text.config(state="normal")
+        output_text.delete("1.0", END)
+        output_text.insert(END, ciphertext)
+        output_text.config(state="disabled")
+    elif (selected.get() == "AES (ECB)") & file_opened:
+        filename = os.path.basename(filepath)
+        key = key_field.get("1.0", END).replace("\n", "")
+        encryptAESFile(filename, key.encode())
+        out_filepath = find_file_recursive("(enc)" + filename)
+        output_text.config(state="normal")
+        output_text.delete("1.0", END)
+        output_text.insert(END, "Done - Filepath: " + out_filepath)
+        output_text.config(state="disabled")
+    elif (selected.get() == "AES (CBC)") & file_opened:
+        filename = os.path.basename(filepath)
+        key = key_field.get("1.0", END).replace("\n", "")
+        iv = iv_field.get("1.0", END).replace("\n", "")
+        encryptAESFile(filename, key.encode(), "CBC", iv.encode())
+        out_filepath = find_file_recursive("(enc)" + filename)
+        output_text.config(state="normal")
+        output_text.delete("1.0", END)
+        output_text.insert(END, "Done - Filepath: " + out_filepath)
+        output_text.config(state="disabled")
+
+
+def dec_aes():
+    if (selected.get() == "AES (ECB)") & (not file_opened):
+        ciphertext = base64.b64decode(input_text.get("1.0", END).replace("\n", ""))
+        key = key_field.get("1.0", END).replace("\n", "")
+        plaintext = decryptAESText(ciphertext, key.encode())
+        output_text.config(state="normal")
+        output_text.delete("1.0", END)
+        output_text.insert(END, plaintext)
+        output_text.config(state="disabled")
+    elif (selected.get() == "AES (CBC)") & (not file_opened):
+        ciphertext = base64.b64decode(input_text.get("1.0", END).replace("\n", ""))
+        key = key_field.get("1.0", END).replace("\n", "")
+        iv = iv_field.get("1.0", END).replace("\n", "")
+        plaintext = decryptAESText(ciphertext, key.encode(), "CBC", iv.encode())
+        output_text.config(state="normal")
+        output_text.delete("1.0", END)
+        output_text.insert(END, plaintext)
+        output_text.config(state="disabled")
+    elif (selected.get() == "AES (ECB)") & file_opened:
+        filename = os.path.basename(filepath)
+        key = key_field.get("1.0", END).replace("\n", "")
+        decryptAESFile(filename, key.encode())
+        out_filepath = find_file_recursive("(dec)" + filename)
+        output_text.config(state="normal")
+        output_text.delete("1.0", END)
+        output_text.insert(END, "Done - Filepath: " + out_filepath)
+        output_text.config(state="disabled")
+    elif (selected.get() == "AES (CBC)") & file_opened:
+        filename = os.path.basename(filepath)
+        key = key_field.get("1.0", END).replace("\n", "")
+        iv = iv_field.get("1.0", END).replace("\n", "")
+        decryptAESFile(filename, key.encode(), "CBC", iv.encode())
+        out_filepath = find_file_recursive("(dec)" + filename.replace("(enc)", ""))
+        output_text.config(state="normal")
+        output_text.delete("1.0", END)
+        output_text.insert(END, "Done - Filepath: " + out_filepath)
+        output_text.config(state="disabled")
+
+
+en_button = Button(options_frame, text="ENCRYPT", pady=10, padx=20, width=22, command=en_aes)
 en_button.grid(row=7, column=0, padx=4)
 en_button.grid_forget()
 
-dec_button = Button(options_frame, text="DECRYPT", pady=10, padx=20, width=22)
+dec_button = Button(options_frame, text="DECRYPT", pady=10, padx=20, width=22, command=dec_aes)
 dec_button.grid(row=7, column=2, padx=4)
 dec_button.grid_forget()
 
@@ -55,16 +155,22 @@ input_text = Text(in_frame, width=50, height=10)
 input_text.insert(END, "Enter Text")
 input_text.grid(row=0, column=0, pady=5)
 
+filepath = StringVar
+
 
 def open_file():
-    filename = filedialog.askopenfilename(title="Select A File", filetypes=(("text files", "*.txt"),))
-    if filename:
-        with open(filename, 'r', encoding='utf-8') as file:
+    global filepath
+    filepath = filedialog.askopenfilename(title="Select A File", filetypes=(("text files", "*.txt"),))
+    if filepath:
+        global file_opened
+        file_opened = True
+        with open(filepath, 'r') as file:
             file_content = file.read()
             input_text.delete("1.0", END)
             input_text.insert(END, file_content)
 
 
+file_opened = False
 file_button = Button(in_frame, text="Open File", command=open_file, width=57)
 file_button.grid(row=1, column=0)
 
