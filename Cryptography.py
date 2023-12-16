@@ -10,25 +10,6 @@ import base64
 IV = b"0000000000000000"
 
 
-def pad_with_null_bytes(data, target_length):
-    # Pad the data with null bytes to reach the target length to make the last byte identified
-    current_length = len(data)
-    padding_size = target_length - current_length
-    padding = b'\x00' * padding_size
-    padded_data = data + padding
-    return padded_data
-
-
-def remove_null_bytes(data):
-    # Check if null bytes are present
-    if b'\x00' in data:
-        # Remove null bytes
-        data_without_null_bytes = data.replace(b'\x00', b'')
-        return data_without_null_bytes
-    else:
-        return data  # No null bytes, return as is
-
-
 def remove_pkcs7_padding(data):
     if not data:
         return b''  # Ensure the data is not empty
