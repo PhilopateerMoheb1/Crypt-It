@@ -6,6 +6,7 @@ from IVError import IVError
 import os
 import base64
 
+
 # Initialization vector (IV) for AES encryption
 IV = b"0000000000000000"
 
