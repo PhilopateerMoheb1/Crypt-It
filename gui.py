@@ -6,9 +6,10 @@ from Cryptography import *
 root = Tk()
 
 root.title('Crypt-It')
+root.config(bg="#e09f3e")
 
 # options frame and its constituents
-options_frame = LabelFrame(root, text="Choose your options:", padx=20, pady=56)
+options_frame = LabelFrame(root, text="Choose your options:", padx=20, pady=56, bg="#e09f3e")
 options_frame.grid(row=0, column=0)
 
 options = ["AES (ECB)", "AES (CBC)", "RSA", "sha512"]
@@ -34,15 +35,15 @@ selected = StringVar(root)
 selected.set("Choose Tool")
 
 drop = OptionMenu(options_frame, selected, *options, command=on_selection)
-drop.config(width=60)
+drop.config(width=60, bg="#003049", fg="#e9c46a")
 drop.grid(row=0, column=0, columnspan=10)
 
-key_field = Text(options_frame, width=50, height=15)
+key_field = Text(options_frame, width=50, height=15, bg="#FDF0D5")
 key_field.insert(END, "Enter Your Key")
 key_field.grid(row=1, column=0, columnspan=10, pady=10)
 key_field.grid_forget()
 
-iv_field = Text(options_frame, width=50, height=1)
+iv_field = Text(options_frame, width=50, height=1, bg="#FDF0D5")
 iv_field.insert(END, "Enter Your Initialization Vector")
 iv_field.grid(row=2, column=0, columnspan=10, pady=10)
 iv_field.grid_forget()
@@ -135,23 +136,23 @@ def dec_aes():
         output_text.config(state="disabled")
 
 
-en_button = Button(options_frame, text="ENCRYPT", pady=10, padx=20, width=22, command=en_aes)
+en_button = Button(options_frame, text="ENCRYPT", pady=10, padx=20, width=22, command=en_aes, bg="#780000", fg="#e9c46a")
 en_button.grid(row=7, column=0, padx=4)
 en_button.grid_forget()
 
-dec_button = Button(options_frame, text="DECRYPT", pady=10, padx=20, width=22, command=dec_aes)
+dec_button = Button(options_frame, text="DECRYPT", pady=10, padx=20, width=22, command=dec_aes, bg="#780000", fg="#e9c46a")
 dec_button.grid(row=7, column=2, padx=4)
 dec_button.grid_forget()
 
 # right frame
-r_frame = LabelFrame(root, borderwidth=0, highlightthickness=0)
+r_frame = LabelFrame(root, borderwidth=0, highlightthickness=0, bg="#e09f3e")
 r_frame.grid(row=0, column=1)
 
 # input frame and its constituents
-in_frame = LabelFrame(r_frame, text="INPUT TEXT", padx=10, pady=10)
+in_frame = LabelFrame(r_frame, text="INPUT TEXT", padx=10, pady=10, bg="#e09f3e")
 in_frame.pack(pady=10)
 
-input_text = Text(in_frame, width=50, height=10)
+input_text = Text(in_frame, width=50, height=10, bg="#FDF0D5")
 input_text.insert(END, "Enter Text")
 input_text.grid(row=0, column=0, pady=5)
 
@@ -171,14 +172,14 @@ def open_file():
 
 
 file_opened = False
-file_button = Button(in_frame, text="Open File", command=open_file, width=57)
+file_button = Button(in_frame, text="Open File", command=open_file, width=57, bg="#780000", fg="#e9c46a")
 file_button.grid(row=1, column=0)
 
 # output frame and its constituents
-out_frame = LabelFrame(r_frame, text="OUTPUT TEXT", padx=10, pady=10)
+out_frame = LabelFrame(r_frame, text="OUTPUT TEXT", padx=10, pady=10, bg="#e09f3e")
 out_frame.pack(pady=10)
 
-output_text = Text(out_frame, width=50, height=10)
+output_text = Text(out_frame, width=50, height=10, bg="#FDF0D5")
 output_text.insert(END, "Result")
 output_text.config(state="disabled")
 output_text.grid(row=0, column=0, pady=5)
