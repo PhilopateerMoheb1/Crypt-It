@@ -2,6 +2,7 @@ import base64
 from tkinter import *
 from tkinter import filedialog
 from Cryptography import *
+from RSA import *
 
 root = Tk()
 
@@ -17,18 +18,32 @@ options = ["AES (ECB)", "AES (CBC)", "RSA", "sha512"]
 clicked = StringVar()
 clicked.set("Choose Tool")
 
+public_key = StringVar()
+private_key = StringVar()
+
 
 # show appropriate buttons when an option is selected
 def on_selection(*args):
     if selected.get() == "AES (ECB)":
         key_field.grid(row=1, column=0, columnspan=10, pady=10)
-        en_button.grid(row=7, column=0, padx=4)
-        dec_button.grid(row=7, column=2, padx=4)
+        aes_en_button.grid(row=7, column=0, padx=4)
+        aes_dec_button.grid(row=7, column=2, padx=4)
     elif selected.get() == "AES (CBC)":
         key_field.grid(row=1, column=0, columnspan=10, pady=10)
-        en_button.grid(row=7, column=0, padx=4)
-        dec_button.grid(row=7, column=2, padx=4)
+        aes_en_button.grid(row=7, column=0, padx=4)
+        aes_dec_button.grid(row=7, column=2, padx=4)
         iv_field.grid(row=2, column=0, columnspan=10, pady=10)
+    elif selected.get() == "RSA":
+        global public_key
+        global private_key
+        rsa_enc_button.grid(row=1, column=0, padx=4, pady=5)
+        rsa_dec_button.grid(row=1, column=1, padx=4, pady=5)
+        generate_keys()
+        with open("public.pem", "rb") as f:
+            public_key = rsa.PublicKey.load_pkcs1(f.read())
+
+        with open("private.pem", "rb") as f:
+            private_key = rsa.PrivateKey.load_pkcs1(f.read())
 
 
 selected = StringVar(root)
@@ -136,13 +151,72 @@ def dec_aes():
         output_text.config(state="disabled")
 
 
-en_button = Button(options_frame, text="ENCRYPT", pady=10, padx=20, width=22, command=en_aes, bg="#780000", fg="#e9c46a")
-en_button.grid(row=7, column=0, padx=4)
-en_button.grid_forget()
+temp_input = None
 
-dec_button = Button(options_frame, text="DECRYPT", pady=10, padx=20, width=22, command=dec_aes, bg="#780000", fg="#e9c46a")
-dec_button.grid(row=7, column=2, padx=4)
-dec_button.grid_forget()
+
+def enc_rsa():
+    global private_key
+    global public_key
+    global temp_input
+    if (selected.get() == "RSA") & file_opened:
+        filename = os.path.basename(filepath)
+        encrypt_fileRSA(filename, public_key)
+        out_filepath = find_file_recursive("encrypted_" + filename)
+        output_text.config(state="normal")
+        output_text.delete("1.0", END)
+        output_text.insert(END, "Done - Filepath: " + out_filepath)
+        output_text.config(state="disabled")
+    elif (selected.get() == "RSA") & (not file_opened):
+        plaintext = input_text.get("1.0", END).replace("\n", "")
+        ciphertext = encrypt_messageRSA(plaintext, public_key)
+        output_text.config(state="normal")
+        output_text.delete("1.0", END)
+        output_text.insert(END, ciphertext)
+        output_text.config(state="disabled")
+        input_text.config(state="disabled")
+        temp_input = ciphertext
+
+
+def dec_rsa():
+    global private_key
+    global public_key
+    global temp_input
+    if (selected.get() == "RSA") & file_opened:
+        filename = os.path.basename(filepath)
+        decrypt_fileRSA(filename, private_key)
+        out_filepath = find_file_recursive("decrypted_" + filename)
+        output_text.config(state="normal")
+        output_text.delete("1.0", END)
+        output_text.insert(END, "Done - Filepath: " + out_filepath)
+        output_text.config(state="disabled")
+    elif (selected.get() == "RSA") & (not file_opened):
+        ciphertext = temp_input
+        plaintext = decrypt_messageRSA(ciphertext, private_key)
+        output_text.config(state="normal")
+        output_text.delete("1.0", END)
+        output_text.insert(END, plaintext)
+        output_text.config(state="disabled")
+
+
+aes_en_button = Button(options_frame, text="ENCRYPT", pady=10, padx=20, width=22, command=en_aes, bg="#780000",
+                       fg="#e9c46a")
+aes_en_button.grid(row=7, column=0, padx=4)
+aes_en_button.grid_forget()
+
+aes_dec_button = Button(options_frame, text="DECRYPT", pady=10, padx=20, width=22, command=dec_aes, bg="#780000",
+                        fg="#e9c46a")
+aes_dec_button.grid(row=7, column=2, padx=4)
+aes_dec_button.grid_forget()
+
+rsa_enc_button = Button(options_frame, text="ENCRYPT", pady=10, padx=20, width=22, command=enc_rsa, bg="#780000",
+                        fg="#e9c46a")
+rsa_enc_button.grid(row=1, column=0, padx=4, pady=5)
+rsa_enc_button.grid_forget()
+
+rsa_dec_button = Button(options_frame, text="DECRYPT", pady=10, padx=20, width=22, command=dec_rsa, bg="#780000",
+                        fg="#e9c46a")
+rsa_dec_button.grid(row=1, column=1, padx=4, pady=5)
+rsa_dec_button.grid_forget()
 
 # right frame
 r_frame = LabelFrame(root, borderwidth=0, highlightthickness=0, bg="#e09f3e")
