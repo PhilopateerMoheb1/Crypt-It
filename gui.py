@@ -28,14 +28,23 @@ def on_selection(*args):
         key_field.grid(row=1, column=0, columnspan=10, pady=10)
         aes_en_button.grid(row=7, column=0, padx=4)
         aes_dec_button.grid(row=7, column=2, padx=4)
+        iv_field.grid_forget()
+        rsa_enc_button.grid_forget()
+        rsa_dec_button.grid_forget()
     elif selected.get() == "AES (CBC)":
         key_field.grid(row=1, column=0, columnspan=10, pady=10)
         aes_en_button.grid(row=7, column=0, padx=4)
         aes_dec_button.grid(row=7, column=2, padx=4)
         iv_field.grid(row=2, column=0, columnspan=10, pady=10)
+        rsa_enc_button.grid_forget()
+        rsa_dec_button.grid_forget()
     elif selected.get() == "RSA":
         global public_key
         global private_key
+        aes_en_button.grid_forget()
+        aes_dec_button.grid_forget()
+        iv_field.grid_forget()
+        key_field.grid_forget()
         rsa_enc_button.grid(row=1, column=0, padx=4, pady=5)
         rsa_dec_button.grid(row=1, column=1, padx=4, pady=5)
         generate_keys()
@@ -72,6 +81,7 @@ def find_file_recursive(file_name):
 
 
 def en_aes():
+    global file_opened
     if (selected.get() == "AES (ECB)") & (not file_opened):
         plaintext = input_text.get("1.0", END).replace("\n", "")
         key = key_field.get("1.0", END).replace("\n", "")
@@ -100,6 +110,7 @@ def en_aes():
         output_text.delete("1.0", END)
         output_text.insert(END, "Done - Filepath: " + out_filepath)
         output_text.config(state="disabled")
+        file_opened = False
     elif (selected.get() == "AES (CBC)") & file_opened:
         filename = os.path.basename(filepath)
         key = key_field.get("1.0", END).replace("\n", "")
@@ -110,9 +121,11 @@ def en_aes():
         output_text.delete("1.0", END)
         output_text.insert(END, "Done - Filepath: " + out_filepath)
         output_text.config(state="disabled")
+        file_opened = False
 
 
 def dec_aes():
+    global file_opened
     if (selected.get() == "AES (ECB)") & (not file_opened):
         ciphertext = base64.b64decode(input_text.get("1.0", END).replace("\n", ""))
         key = key_field.get("1.0", END).replace("\n", "")
@@ -139,6 +152,7 @@ def dec_aes():
         output_text.delete("1.0", END)
         output_text.insert(END, "Done - Filepath: " + out_filepath)
         output_text.config(state="disabled")
+        file_opened = False
     elif (selected.get() == "AES (CBC)") & file_opened:
         filename = os.path.basename(filepath)
         key = key_field.get("1.0", END).replace("\n", "")
@@ -149,12 +163,14 @@ def dec_aes():
         output_text.delete("1.0", END)
         output_text.insert(END, "Done - Filepath: " + out_filepath)
         output_text.config(state="disabled")
+        file_opened = False
 
 
 temp_input = None
 
 
 def enc_rsa():
+    global file_opened
     global private_key
     global public_key
     global temp_input
@@ -166,6 +182,7 @@ def enc_rsa():
         output_text.delete("1.0", END)
         output_text.insert(END, "Done - Filepath: " + out_filepath)
         output_text.config(state="disabled")
+        file_opened = False
     elif (selected.get() == "RSA") & (not file_opened):
         plaintext = input_text.get("1.0", END).replace("\n", "")
         ciphertext = encrypt_messageRSA(plaintext, public_key)
@@ -178,6 +195,7 @@ def enc_rsa():
 
 
 def dec_rsa():
+    global file_opened
     global private_key
     global public_key
     global temp_input
@@ -189,6 +207,7 @@ def dec_rsa():
         output_text.delete("1.0", END)
         output_text.insert(END, "Done - Filepath: " + out_filepath)
         output_text.config(state="disabled")
+        file_opened = False
     elif (selected.get() == "RSA") & (not file_opened):
         ciphertext = temp_input
         plaintext = decrypt_messageRSA(ciphertext, private_key)
@@ -196,6 +215,7 @@ def dec_rsa():
         output_text.delete("1.0", END)
         output_text.insert(END, plaintext)
         output_text.config(state="disabled")
+        input_text.config(state="normal")
 
 
 aes_en_button = Button(options_frame, text="ENCRYPT", pady=10, padx=20, width=22, command=en_aes, bg="#780000",
