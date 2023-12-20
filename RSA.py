@@ -1,20 +1,21 @@
-import rsa, base64
+import base64
+import rsa;
 
 def generate_keys(mode="F"):
-    #F : Fast S:Secure (fast it will be 2048 Secure it will be 4096)
+    #F:Fast, S:Secure (Fast it will be 2048 while Secure it will be 4096)
     if(mode=="F"):
         public_key, private_key = rsa.newkeys(2048)
     elif(mode=="S"):
         public_key, private_key = rsa.newkeys(4096)
-    # Write public and private keys into files
     with open("public.pem", "wb") as f:
         f.write(public_key.save_pkcs1("PEM"))
+
     with open("private.pem", "wb") as f:
         f.write(private_key.save_pkcs1("PEM"))
 
 def encrypt_messageRSA(message, public_key):
     encrypted_message = rsa.encrypt(message.encode(), public_key)
-    with open("encrypted_message.txt", "wb") as f:
+    with open("encrypted.message", "wb") as f:
         f.write(encrypted_message)
     return encrypted_message
 
@@ -49,13 +50,11 @@ def sign_fileRSA(file_name, private_key):
     with open("signature_" + file_name, 'wb') as f:
         f.write(signature)
 
-def verify_messageRSA(message, signature, public_key):
+def verify_messageRSA(message, public_key):
     try:
-        verified = rsa.verify(message.encode(), signature, public_key)
-        if verified:
-            print("Signature verified: Message has not been tampered with.")
-        else:
-            print("Verification failed: Message has been tampered with.")
+        with open("signature_msg.txt", "rb") as f:
+            signature=f.read()
+        return rsa.verify(message.encode(), signature, public_key)
     except:
         return 0
     
@@ -69,6 +68,7 @@ def verify_fileRSA(file_name, public_key):
         print("Signature verified: File has not been tampered with.")
     else:
         print("Verification failed: File has been tampered with.")
+
 
 def main():
     generate_keys()
@@ -99,7 +99,7 @@ def main():
                 print(f"Decrypted message: {decrypted_msg}")
             elif(choice=="F"):
                 file_name = input("Enter file name to decrypt: ")
-                decrypt_fileRSA("encrypted_" + file_name, private_key)
+                decrypt_fileRSA(file_name, private_key)
                 print("File decrypted successfully.")
         elif choice == 'S':
             choice = input("Text(T) or File(F) to sign: ")
@@ -114,11 +114,15 @@ def main():
         elif choice == 'V':
             choice = input("Text(T) or File(F) to sign: ")
             if(choice=="T"):
-                signature = input("Enter signed message to verify: ")
-                verify_messageRSA(message, signature, public_key)
+                message = input("Enter signed message to verify: ")
+                verified = verify_messageRSA(message, public_key)
+                if verified:
+                    print("Signature verified: Message has not been tampered with.")
+                else:
+                    print("Verification failed: Message has been tampered with.")
             elif(choice=="F"):
                 file_name = input("Enter file name to verify signature: ")
-                verify_fileRSA(file_name, public_key)
+                verified = verify_fileRSA(file_name, public_key)
         else:
             print("No option selected, closing...")
 
