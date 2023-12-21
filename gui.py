@@ -31,6 +31,8 @@ def on_selection(*args):
         iv_field.grid_forget()
         rsa_enc_button.grid_forget()
         rsa_dec_button.grid_forget()
+        rsa_sign_button.grid_forget()
+        rsa_verify_button.grid_forget()
     elif selected.get() == "AES (CBC)":
         key_field.grid(row=1, column=0, columnspan=10, pady=10)
         aes_en_button.grid(row=7, column=0, padx=4)
@@ -38,6 +40,8 @@ def on_selection(*args):
         iv_field.grid(row=2, column=0, columnspan=10, pady=10)
         rsa_enc_button.grid_forget()
         rsa_dec_button.grid_forget()
+        rsa_sign_button.grid_forget()
+        rsa_verify_button.grid_forget()
     elif selected.get() == "RSA":
         global public_key
         global private_key
@@ -47,6 +51,8 @@ def on_selection(*args):
         key_field.grid_forget()
         rsa_enc_button.grid(row=1, column=0, padx=4, pady=5)
         rsa_dec_button.grid(row=1, column=1, padx=4, pady=5)
+        rsa_sign_button.grid(row=2, column=0, padx=4, pady=5)
+        rsa_verify_button.grid(row=2, column=1, padx=4, pady=5)
         generate_keys()
         with open("public.pem", "rb") as f:
             public_key = rsa.PublicKey.load_pkcs1(f.read())
@@ -166,6 +172,17 @@ def dec_aes():
         file_opened = False
 
 
+# AES Buttons
+aes_en_button = Button(options_frame, text="ENCRYPT", pady=10, padx=20, width=22, command=en_aes, bg="#780000",
+                       fg="#e9c46a")
+aes_en_button.grid(row=7, column=0, padx=4)
+aes_en_button.grid_forget()
+
+aes_dec_button = Button(options_frame, text="DECRYPT", pady=10, padx=20, width=22, command=dec_aes, bg="#780000",
+                        fg="#e9c46a")
+aes_dec_button.grid(row=7, column=2, padx=4)
+aes_dec_button.grid_forget()
+
 temp_input = None
 
 
@@ -218,16 +235,56 @@ def dec_rsa():
         input_text.config(state="normal")
 
 
-aes_en_button = Button(options_frame, text="ENCRYPT", pady=10, padx=20, width=22, command=en_aes, bg="#780000",
-                       fg="#e9c46a")
-aes_en_button.grid(row=7, column=0, padx=4)
-aes_en_button.grid_forget()
+def sign_rsa():
+    global file_opened
+    global private_key
+    global public_key
+    if (selected.get() == "RSA") & file_opened:
+        filename = os.path.basename(filepath)
+        sign_fileRSA(filename, private_key)
+        out_filepath = find_file_recursive("signature_" + filename)
+        output_text.config(state="normal")
+        output_text.delete("1.0", END)
+        output_text.insert(END, "Done - Filepath: " + out_filepath)
+        output_text.config(state="disabled")
+        file_opened = False
+    elif (selected.get() == "RSA") & (not file_opened):
+        message = input_text.get("1.0", END).replace("\n", "")
+        sign_messageRSA(message, private_key)
+        out_filepath = find_file_recursive("signature_msg.txt")
+        output_text.config(state="normal")
+        output_text.delete("1.0", END)
+        output_text.insert(END, "Done - Filepath: " + out_filepath)
+        output_text.config(state="disabled")
 
-aes_dec_button = Button(options_frame, text="DECRYPT", pady=10, padx=20, width=22, command=dec_aes, bg="#780000",
-                        fg="#e9c46a")
-aes_dec_button.grid(row=7, column=2, padx=4)
-aes_dec_button.grid_forget()
 
+def verify_rsa():
+    global file_opened
+    global private_key
+    global public_key
+    if (selected.get() == "RSA") & file_opened:
+        filename = os.path.basename(filepath)
+        result = verify_fileRSA(filename, public_key)
+        output_text.config(state="normal")
+        output_text.delete("1.0", END)
+        output_text.insert(END, result)
+        output_text.config(state="disabled")
+        file_opened = False
+    elif (selected.get() == "RSA") & (not file_opened):
+        message = input_text.get("1.0", END).replace("\n", "")
+        verified = verify_messageRSA(message, public_key)
+        if verified:
+            result = "Signature verified: Message has not been tampered with."
+        else:
+            result = "Verification failed: Message has been tampered with."
+        output_text.config(state="normal")
+        output_text.delete("1.0", END)
+        output_text.insert(END, result)
+        output_text.config(state="disabled")
+        input_text.config(state="normal")
+
+
+# RSA Buttons
 rsa_enc_button = Button(options_frame, text="ENCRYPT", pady=10, padx=20, width=22, command=enc_rsa, bg="#780000",
                         fg="#e9c46a")
 rsa_enc_button.grid(row=1, column=0, padx=4, pady=5)
@@ -237,6 +294,16 @@ rsa_dec_button = Button(options_frame, text="DECRYPT", pady=10, padx=20, width=2
                         fg="#e9c46a")
 rsa_dec_button.grid(row=1, column=1, padx=4, pady=5)
 rsa_dec_button.grid_forget()
+
+rsa_sign_button = Button(options_frame, text="SIGN", pady=10, padx=20, width=22, command=sign_rsa, bg="#780000",
+                         fg="#e9c46a")
+rsa_sign_button.grid(row=2, column=0, padx=4, pady=5)
+rsa_sign_button.grid_forget()
+
+rsa_verify_button = Button(options_frame, text="VERIFY", pady=10, padx=20, width=22, command=verify_rsa, bg="#780000",
+                           fg="#e9c46a")
+rsa_verify_button.grid(row=2, column=1, padx=4, pady=5)
+rsa_verify_button.grid_forget()
 
 # right frame
 r_frame = LabelFrame(root, borderwidth=0, highlightthickness=0, bg="#e09f3e")
