@@ -235,13 +235,13 @@ def enc_rsa():
         file_opened = False
     elif (selected.get() == "RSA") & (not file_opened):
         plaintext = input_text.get("1.0", END).replace("\n", "")
-        ciphertext = encrypt_messageRSA(plaintext, public_key)
+        ciphertext = str(base64.b64encode(encrypt_messageRSA(plaintext, public_key)))
+        ciphertext = ciphertext.replace("b'", "").replace("'", "")
         output_text.config(state="normal")
         output_text.delete("1.0", END)
         output_text.insert(END, ciphertext)
         output_text.config(state="disabled")
-        input_text.config(state="disabled")
-        temp_input = ciphertext
+
 
 
 def dec_rsa():
@@ -259,7 +259,7 @@ def dec_rsa():
         output_text.config(state="disabled")
         file_opened = False
     elif (selected.get() == "RSA") & (not file_opened):
-        ciphertext = temp_input
+        ciphertext = base64.b64decode(input_text.get("1.0", END).replace("\n", ""))
         plaintext = decrypt_messageRSA(ciphertext, private_key)
         output_text.config(state="normal")
         output_text.delete("1.0", END)
