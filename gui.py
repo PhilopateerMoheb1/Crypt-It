@@ -4,6 +4,7 @@ from tkinter import filedialog
 from Cryptography import *
 from RSA import *
 from SHA512 import *
+from DES3 import *
 
 root = Tk()
 
@@ -14,7 +15,7 @@ root.config(bg="#e09f3e")
 options_frame = LabelFrame(root, text="Choose your options:", padx=20, pady=56, bg="#e09f3e")
 options_frame.grid(row=0, column=0)
 
-options = ["AES (ECB)", "AES (CBC)", "RSA", "sha512"]
+options = ["AES (ECB)", "AES (CBC)", "RSA", "sha512", "Triple DES"]
 
 clicked = StringVar()
 clicked.set("Choose Tool")
@@ -34,6 +35,8 @@ def on_selection(*args):
         rsa_dec_button.grid_forget()
         rsa_sign_button.grid_forget()
         rsa_verify_button.grid_forget()
+        des_en_button.grid_forget()
+        des_dec_button.grid_forget()
     elif selected.get() == "AES (CBC)":
         key_field.grid(row=1, column=0, columnspan=10, pady=10)
         aes_en_button.grid(row=7, column=0, padx=4)
@@ -43,6 +46,8 @@ def on_selection(*args):
         rsa_dec_button.grid_forget()
         rsa_sign_button.grid_forget()
         rsa_verify_button.grid_forget()
+        des_en_button.grid_forget()
+        des_dec_button.grid_forget()
     elif selected.get() == "RSA":
         global public_key
         global private_key
@@ -50,6 +55,8 @@ def on_selection(*args):
         aes_dec_button.grid_forget()
         iv_field.grid_forget()
         key_field.grid_forget()
+        des_en_button.grid_forget()
+        des_dec_button.grid_forget()
         rsa_enc_button.grid(row=1, column=0, padx=4, pady=5)
         rsa_dec_button.grid(row=1, column=1, padx=4, pady=5)
         rsa_sign_button.grid(row=2, column=0, padx=4, pady=5)
@@ -66,6 +73,19 @@ def on_selection(*args):
         aes_en_button.grid_forget()
         aes_dec_button.grid_forget()
         iv_field.grid_forget()
+        rsa_enc_button.grid_forget()
+        rsa_dec_button.grid_forget()
+        rsa_sign_button.grid_forget()
+        rsa_verify_button.grid_forget()
+        des_en_button.grid_forget()
+        des_dec_button.grid_forget()
+    elif selected.get() == "Triple DES":
+        key_field.grid(row=1, column=0, columnspan=10, pady=10)
+        des_en_button.grid(row=7, column=0, padx=4)
+        des_dec_button.grid(row=7, column=2, padx=4)
+        iv_field.grid_forget()
+        aes_en_button.grid_forget()
+        aes_dec_button.grid_forget()
         rsa_enc_button.grid_forget()
         rsa_dec_button.grid_forget()
         rsa_sign_button.grid_forget()
@@ -343,6 +363,63 @@ hash_button = Button(options_frame, text="HASH", pady=10, padx=20, width=50, com
                      fg="#e9c46a")
 hash_button.grid(row=1, column=0, padx=4, pady=5)
 hash_button.grid_forget()
+
+
+# DES3 functions
+def enc_des3():
+    global file_opened
+    if (selected.get() == "Triple DES") & file_opened:
+        filename = os.path.basename(filepath)
+        key = key_field.get("1.0", END).replace("\n", "")
+        encrypt_des3(filepath, key)
+        out_filepath = find_file_recursive("encodedDES3_" + filename)
+        output_text.config(state="normal")
+        output_text.delete("1.0", END)
+        output_text.insert(END, "Done - Filepath: " + out_filepath)
+        output_text.config(state="disabled")
+        file_opened = False
+    elif (selected.get() == "Triple DES") & (not file_opened):
+        plaintext = input_text.get("1.0", END).replace("\n", "")
+        ciphertext = encrypt_messageRSA(plaintext, public_key)
+        output_text.config(state="normal")
+        output_text.delete("1.0", END)
+        output_text.insert(END, ciphertext)
+        output_text.config(state="disabled")
+        input_text.config(state="disabled")
+
+
+def dec_des3():
+    global file_opened
+    if (selected.get() == "Triple DES") & file_opened:
+        filename = os.path.basename(filepath)
+        key = key_field.get("1.0", END).replace("\n", "")
+        decrypt_des3(filepath, key)
+        out_filepath = find_file_recursive("decodedDES3_" + filename)
+        output_text.config(state="normal")
+        output_text.delete("1.0", END)
+        output_text.insert(END, "Done - Filepath: " + out_filepath)
+        output_text.config(state="disabled")
+        file_opened = False
+    elif (selected.get() == "Triple DES") & (not file_opened):
+        ciphertext = temp_input
+        plaintext = decrypt_messageRSA(ciphertext, private_key)
+        output_text.config(state="normal")
+        output_text.delete("1.0", END)
+        output_text.insert(END, plaintext)
+        output_text.config(state="disabled")
+        input_text.config(state="normal")
+
+
+# DES3 buttons
+des_en_button = Button(options_frame, text="ENCRYPT", pady=10, padx=20, width=22, command=enc_des3, bg="#780000",
+                       fg="#e9c46a")
+des_en_button.grid(row=7, column=0, padx=4)
+des_en_button.grid_forget()
+
+des_dec_button = Button(options_frame, text="DECRYPT", pady=10, padx=20, width=22, command=dec_des3, bg="#780000",
+                        fg="#e9c46a")
+des_dec_button.grid(row=7, column=2, padx=4)
+des_dec_button.grid_forget()
 
 # right frame
 r_frame = LabelFrame(root, borderwidth=0, highlightthickness=0, bg="#e09f3e")
