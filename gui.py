@@ -3,6 +3,7 @@ from tkinter import *
 from tkinter import filedialog
 from Cryptography import *
 from RSA import *
+from SHA512 import *
 
 root = Tk()
 
@@ -59,6 +60,16 @@ def on_selection(*args):
 
         with open("private.pem", "rb") as f:
             private_key = rsa.PrivateKey.load_pkcs1(f.read())
+    elif selected.get() == "sha512":
+        hash_button.grid(row=1, column=0, padx=4, pady=5)
+        key_field.grid_forget()
+        aes_en_button.grid_forget()
+        aes_dec_button.grid_forget()
+        iv_field.grid_forget()
+        rsa_enc_button.grid_forget()
+        rsa_dec_button.grid_forget()
+        rsa_sign_button.grid_forget()
+        rsa_verify_button.grid_forget()
 
 
 selected = StringVar(root)
@@ -86,6 +97,7 @@ def find_file_recursive(file_name):
     return None
 
 
+# aes functions
 def en_aes():
     global file_opened
     if (selected.get() == "AES (ECB)") & (not file_opened):
@@ -186,6 +198,7 @@ aes_dec_button.grid_forget()
 temp_input = None
 
 
+# rsa functions
 def enc_rsa():
     global file_opened
     global private_key
@@ -304,6 +317,32 @@ rsa_verify_button = Button(options_frame, text="VERIFY", pady=10, padx=20, width
                            fg="#e9c46a")
 rsa_verify_button.grid(row=2, column=1, padx=4, pady=5)
 rsa_verify_button.grid_forget()
+
+
+# hush functions
+def hash_function():
+    global file_opened
+    if (selected.get() == "sha512") & file_opened:
+        result = hash_file(filepath)
+        output_text.config(state="normal")
+        output_text.delete("1.0", END)
+        output_text.insert(END, result)
+        output_text.config(state="disabled")
+        file_opened = False
+    elif (selected.get() == "sha512") & (not file_opened):
+        text = input_text.get("1.0", END).replace("\n", "")
+        result = hash_text(text)
+        output_text.config(state="normal")
+        output_text.delete("1.0", END)
+        output_text.insert(END, result)
+        output_text.config(state="disabled")
+
+
+# sha512 hash buttons
+hash_button = Button(options_frame, text="HASH", pady=10, padx=20, width=50, command=hash_function, bg="#780000",
+                     fg="#e9c46a")
+hash_button.grid(row=1, column=0, padx=4, pady=5)
+hash_button.grid_forget()
 
 # right frame
 r_frame = LabelFrame(root, borderwidth=0, highlightthickness=0, bg="#e09f3e")
