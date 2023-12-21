@@ -364,14 +364,17 @@ hash_button = Button(options_frame, text="HASH", pady=10, padx=20, width=50, com
 hash_button.grid(row=1, column=0, padx=4, pady=5)
 hash_button.grid_forget()
 
+encoded_message = None
+
 
 # DES3 functions
 def enc_des3():
+    global encoded_message
     global file_opened
     if (selected.get() == "Triple DES") & file_opened:
         filename = os.path.basename(filepath)
         key = key_field.get("1.0", END).replace("\n", "")
-        encrypt_des3(filepath, key)
+        encrypt_file_des3(filepath, key)
         out_filepath = find_file_recursive("encodedDES3_" + filename)
         output_text.config(state="normal")
         output_text.delete("1.0", END)
@@ -380,20 +383,23 @@ def enc_des3():
         file_opened = False
     elif (selected.get() == "Triple DES") & (not file_opened):
         plaintext = input_text.get("1.0", END).replace("\n", "")
-        ciphertext = encrypt_messageRSA(plaintext, public_key)
+        key = key_field.get("1.0", END).replace("\n", "")
+        ciphertext = str(base64.b64encode(encrypt_text_des3(plaintext, key)))
+        ciphertext = ciphertext.replace("b'", "").replace("'", "")
         output_text.config(state="normal")
         output_text.delete("1.0", END)
         output_text.insert(END, ciphertext)
         output_text.config(state="disabled")
-        input_text.config(state="disabled")
+
 
 
 def dec_des3():
     global file_opened
+    global encoded_message
     if (selected.get() == "Triple DES") & file_opened:
         filename = os.path.basename(filepath)
         key = key_field.get("1.0", END).replace("\n", "")
-        decrypt_des3(filepath, key)
+        decrypt_file_des3(filepath, key)
         out_filepath = find_file_recursive("decodedDES3_" + filename)
         output_text.config(state="normal")
         output_text.delete("1.0", END)
@@ -401,13 +407,13 @@ def dec_des3():
         output_text.config(state="disabled")
         file_opened = False
     elif (selected.get() == "Triple DES") & (not file_opened):
-        ciphertext = temp_input
-        plaintext = decrypt_messageRSA(ciphertext, private_key)
+        ciphertext = base64.b64decode(input_text.get("1.0", END).replace("\n", ""))
+        key = key_field.get("1.0", END).replace("\n", "")
+        plaintext = decrypt_text_des3(ciphertext, key)
         output_text.config(state="normal")
         output_text.delete("1.0", END)
         output_text.insert(END, plaintext)
         output_text.config(state="disabled")
-        input_text.config(state="normal")
 
 
 # DES3 buttons
