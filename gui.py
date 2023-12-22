@@ -5,6 +5,7 @@ from Cryptography import *
 from RSA import *
 from SHA512 import *
 from DES3 import *
+from ConfAuthSymAsy import *
 
 root = Tk()
 
@@ -15,7 +16,7 @@ root.config(bg="#e09f3e")
 options_frame = LabelFrame(root, text="Choose your options:", padx=20, pady=56, bg="#e09f3e")
 options_frame.grid(row=0, column=0)
 
-options = ["AES (ECB)", "AES (CBC)", "RSA", "sha512", "Triple DES"]
+options = ["AES (ECB)", "AES (CBC)", "RSA", "sha512", "Confidentiality and Authentication", "Triple DES"]
 
 clicked = StringVar()
 clicked.set("Choose Tool")
@@ -37,6 +38,8 @@ def on_selection(*args):
         rsa_verify_button.grid_forget()
         des_en_button.grid_forget()
         des_dec_button.grid_forget()
+        ca_en_button.grid_forget()
+        ca_dec_button.grid_forget()
     elif selected.get() == "AES (CBC)":
         key_field.grid(row=1, column=0, columnspan=10, pady=10)
         aes_en_button.grid(row=7, column=0, padx=4)
@@ -48,6 +51,8 @@ def on_selection(*args):
         rsa_verify_button.grid_forget()
         des_en_button.grid_forget()
         des_dec_button.grid_forget()
+        ca_en_button.grid_forget()
+        ca_dec_button.grid_forget()
     elif selected.get() == "RSA":
         global public_key
         global private_key
@@ -57,6 +62,8 @@ def on_selection(*args):
         key_field.grid_forget()
         des_en_button.grid_forget()
         des_dec_button.grid_forget()
+        ca_en_button.grid_forget()
+        ca_dec_button.grid_forget()
         rsa_enc_button.grid(row=1, column=0, padx=4, pady=5)
         rsa_dec_button.grid(row=1, column=1, padx=4, pady=5)
         rsa_sign_button.grid(row=2, column=0, padx=4, pady=5)
@@ -79,6 +86,21 @@ def on_selection(*args):
         rsa_verify_button.grid_forget()
         des_en_button.grid_forget()
         des_dec_button.grid_forget()
+        ca_en_button.grid_forget()
+        ca_dec_button.grid_forget()
+    elif selected.get() == "Confidentiality and Authentication":
+        ca_en_button.grid(row=7, column=0, padx=4)
+        ca_dec_button.grid(row=7, column=2, padx=4)
+        key_field.grid(row=1, column=0, columnspan=10, pady=10)
+        aes_en_button.grid_forget()
+        aes_dec_button.grid_forget()
+        iv_field.grid_forget()
+        rsa_enc_button.grid_forget()
+        rsa_dec_button.grid_forget()
+        rsa_sign_button.grid_forget()
+        rsa_verify_button.grid_forget()
+        des_en_button.grid_forget()
+        des_dec_button.grid_forget()
     elif selected.get() == "Triple DES":
         key_field.grid(row=1, column=0, columnspan=10, pady=10)
         des_en_button.grid(row=7, column=0, padx=4)
@@ -90,6 +112,8 @@ def on_selection(*args):
         rsa_dec_button.grid_forget()
         rsa_sign_button.grid_forget()
         rsa_verify_button.grid_forget()
+        ca_en_button.grid_forget()
+        ca_dec_button.grid_forget()
 
 
 selected = StringVar(root)
@@ -243,7 +267,6 @@ def enc_rsa():
         output_text.config(state="disabled")
 
 
-
 def dec_rsa():
     global file_opened
     global private_key
@@ -392,7 +415,6 @@ def enc_des3():
         output_text.config(state="disabled")
 
 
-
 def dec_des3():
     global file_opened
     global encoded_message
@@ -426,6 +448,43 @@ des_dec_button = Button(options_frame, text="DECRYPT", pady=10, padx=20, width=2
                         fg="#e9c46a")
 des_dec_button.grid(row=7, column=2, padx=4)
 des_dec_button.grid_forget()
+
+
+# Conf. and Auth. functions
+def enc_ca():
+    global file_opened
+    filename = os.path.basename(filepath)
+    key = key_field.get("1.0", END).replace("\n", "")
+    ConfAuthHashSignedAES(filepath, key.encode(), "ECB")
+    out_filepath = find_file_recursive("(enc)(Conc)" + filename)
+    output_text.config(state="normal")
+    output_text.delete("1.0", END)
+    output_text.insert(END, "Done - Filepath: " + out_filepath)
+    output_text.config(state="disabled")
+    file_opened = False
+
+
+def dec_ca():
+    global file_opened
+    key = key_field.get("1.0", END).replace("\n", "")
+    result = ConfAuthHashVerifyAES(filepath, key.encode(), "ECB")
+    output_text.config(state="normal")
+    output_text.delete("1.0", END)
+    output_text.insert(END, result)
+    output_text.config(state="disabled")
+    file_opened = False
+
+
+# Conf. and Auth. buttons
+ca_en_button = Button(options_frame, text="ENCRYPT", pady=10, padx=20, width=22, command=enc_ca, bg="#780000",
+                      fg="#e9c46a")
+ca_en_button.grid(row=7, column=0, padx=4)
+ca_en_button.grid_forget()
+
+ca_dec_button = Button(options_frame, text="DECRYPT", pady=10, padx=20, width=22, command=dec_ca, bg="#780000",
+                       fg="#e9c46a")
+ca_dec_button.grid(row=7, column=2, padx=4)
+ca_dec_button.grid_forget()
 
 # right frame
 r_frame = LabelFrame(root, borderwidth=0, highlightthickness=0, bg="#e09f3e")
