@@ -40,6 +40,7 @@ def on_selection(*args):
         des_dec_button.grid_forget()
         ca_en_button.grid_forget()
         ca_dec_button.grid_forget()
+        hash_button.grid_forget()
     elif selected.get() == "AES (CBC)":
         key_field.grid(row=1, column=0, columnspan=10, pady=10)
         aes_en_button.grid(row=7, column=0, padx=4)
@@ -53,6 +54,7 @@ def on_selection(*args):
         des_dec_button.grid_forget()
         ca_en_button.grid_forget()
         ca_dec_button.grid_forget()
+        hash_button.grid_forget()
     elif selected.get() == "RSA":
         global public_key
         global private_key
@@ -64,6 +66,7 @@ def on_selection(*args):
         des_dec_button.grid_forget()
         ca_en_button.grid_forget()
         ca_dec_button.grid_forget()
+        hash_button.grid_forget()
         rsa_enc_button.grid(row=1, column=0, padx=4, pady=5)
         rsa_dec_button.grid(row=1, column=1, padx=4, pady=5)
         rsa_sign_button.grid(row=2, column=0, padx=4, pady=5)
@@ -101,6 +104,7 @@ def on_selection(*args):
         rsa_verify_button.grid_forget()
         des_en_button.grid_forget()
         des_dec_button.grid_forget()
+        hash_button.grid_forget()
     elif selected.get() == "Triple DES":
         key_field.grid(row=1, column=0, columnspan=10, pady=10)
         des_en_button.grid(row=7, column=0, padx=4)
@@ -114,6 +118,7 @@ def on_selection(*args):
         rsa_verify_button.grid_forget()
         ca_en_button.grid_forget()
         ca_dec_button.grid_forget()
+        hash_button.grid_forget()
 
 
 selected = StringVar(root)
@@ -291,10 +296,14 @@ def dec_rsa():
         input_text.config(state="normal")
 
 
+signed_message = None
+
+
 def sign_rsa():
     global file_opened
     global private_key
     global public_key
+    global signed_message
     if (selected.get() == "RSA") & file_opened:
         filename = os.path.basename(filepath)
         sign_fileRSA(filename, private_key)
@@ -306,7 +315,7 @@ def sign_rsa():
         file_opened = False
     elif (selected.get() == "RSA") & (not file_opened):
         message = input_text.get("1.0", END).replace("\n", "")
-        sign_messageRSA(message, private_key)
+        signed_message = sign_messageRSA(message, private_key)
         out_filepath = find_file_recursive("signature_msg.txt")
         output_text.config(state="normal")
         output_text.delete("1.0", END)
@@ -318,6 +327,7 @@ def verify_rsa():
     global file_opened
     global private_key
     global public_key
+    global signed_message
     if (selected.get() == "RSA") & file_opened:
         filename = os.path.basename(filepath)
         result = verify_fileRSA(filename, public_key)
@@ -328,7 +338,7 @@ def verify_rsa():
         file_opened = False
     elif (selected.get() == "RSA") & (not file_opened):
         message = input_text.get("1.0", END).replace("\n", "")
-        verified = verify_messageRSA(message, public_key)
+        verified = verify_messageRSA(message, signed_message, public_key)
         if verified:
             result = "Signature verified: Message has not been tampered with."
         else:
@@ -455,7 +465,7 @@ def enc_ca():
     global file_opened
     filename = os.path.basename(filepath)
     key = key_field.get("1.0", END).replace("\n", "")
-    ConfAuthHashSignedAES(filepath, key.encode(), "ECB")
+    ConfAuthHashSignedAES(filename, key.encode(), "ECB")
     out_filepath = find_file_recursive("(enc)(Conc)" + filename)
     output_text.config(state="normal")
     output_text.delete("1.0", END)
@@ -466,8 +476,9 @@ def enc_ca():
 
 def dec_ca():
     global file_opened
+    filename = os.path.basename(filepath)
     key = key_field.get("1.0", END).replace("\n", "")
-    result = ConfAuthHashVerifyAES(filepath, key.encode(), "ECB")
+    result = ConfAuthHashVerifyAES(filename, key.encode(), "ECB")
     output_text.config(state="normal")
     output_text.delete("1.0", END)
     output_text.insert(END, result)

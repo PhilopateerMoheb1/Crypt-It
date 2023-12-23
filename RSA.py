@@ -58,10 +58,8 @@ def sign_fileRSA(file_name, private_key):
         f.write(signature)
 
 
-def verify_messageRSA(message, public_key):
+def verify_messageRSA(message, signature, public_key):
     try:
-        with open("signature_msg.txt", "rb") as f:
-            signature = f.read()
         return rsa.verify(message.encode(), signature, public_key)
     except:
         return 0
