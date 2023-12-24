@@ -247,7 +247,7 @@ def dec_aes():
             decryptAESFile(filename, key.encode())
         except KeyError:
             messagebox.showerror("Error", "Key must have a fixed size [16,24,32]")
-        out_filepath = find_file_recursive("(dec)" + filename)
+        out_filepath = find_file_recursive("(dec)" + filename.replace("(enc)", ""))
         output_text.config(state="normal")
         output_text.delete("1.0", END)
         output_text.insert(END, "Done - Filepath: " + out_filepath)
