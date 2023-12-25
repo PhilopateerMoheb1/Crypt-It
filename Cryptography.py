@@ -51,6 +51,7 @@ def encryptAESFile(filename, key, mode="ECB", IV=b"0000000000000000"):
                         break
                     temp = encryptAESText(chunk, key)
                     outfile.write(temp)
+    return outputFile
 
 
 def decryptAESFile(filename, key, mode="ECB", IV=b"0000000000000000"):
@@ -75,7 +76,7 @@ def decryptAESFile(filename, key, mode="ECB", IV=b"0000000000000000"):
                         break
                     temp = decryptAESText(chunk, key, "ECB")
                     outfile.write(temp)
-
+    return outputFile
 
 def encryptAESText(plaintext, key, mode="ECB", IV=b"0000000000000000"):
     ciphertext = ""
