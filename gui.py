@@ -194,7 +194,7 @@ def en_aes():
         filename = os.path.basename(filepath)
         key = key_field.get("1.0", END).replace("\n", "")
         try:
-            OutputFileName= encryptAESFile(filename, key.encode())
+            OutputFileName = encryptAESFile(filename, key.encode())
         except KeyError:
             messagebox.showerror("Error", "Key must have a fixed size [16,24,32]")
         out_filepath = find_file_recursive(OutputFileName)
@@ -207,7 +207,7 @@ def en_aes():
         filename = os.path.basename(filepath)
         key = key_field.get("1.0", END).replace("\n", "")
         iv = iv_field.get("1.0", END).replace("\n", "")
-        OutputFileName=encryptAESFile(filename, key.encode(), "CBC", iv.encode())
+        OutputFileName = encryptAESFile(filename, key.encode(), "CBC", iv.encode())
         out_filepath = find_file_recursive(OutputFileName)
         output_text.config(state="normal")
         output_text.delete("1.0", END)
@@ -246,7 +246,7 @@ def dec_aes():
     elif (selected.get() == "AES (ECB)") & file_opened:
         filename = os.path.basename(filepath)
         key = key_field.get("1.0", END).replace("\n", "")
-        OutputFileName=decryptAESFile(filename, key.encode())
+        OutputFileName = decryptAESFile(filename, key.encode())
         out_filepath = find_file_recursive(OutputFileName)
         output_text.config(state="normal")
         output_text.delete("1.0", END)
@@ -257,7 +257,7 @@ def dec_aes():
         filename = os.path.basename(filepath)
         key = key_field.get("1.0", END).replace("\n", "")
         iv = iv_field.get("1.0", END).replace("\n", "")
-        outputFileName= decryptAESFile(filename, key.encode(), "CBC", iv.encode())
+        outputFileName = decryptAESFile(filename, key.encode(), "CBC", iv.encode())
         out_filepath = find_file_recursive(outputFileName)
         output_text.config(state="normal")
         output_text.delete("1.0", END)
@@ -338,7 +338,7 @@ def sign_rsa():
     global public_key
     global signed_message
     global sign_rsa_original_message_input
-    sign_rsa_original_message_input=""
+    sign_rsa_original_message_input = ""
     if (selected.get() == "RSA") & file_opened:
         filename = os.path.basename(filepath)
         sign_fileRSA(filename, private_key)
@@ -365,17 +365,17 @@ def verify_rsa():
     global signed_message
     if (selected.get() == "RSA") & file_opened:
         filename = os.path.basename(filepath)
-        if(len(sign_rsa_original_message_input)!=0):
+        if (len(sign_rsa_original_message_input) != 0):
             with open(filename, 'rb') as f:
                 file_content = f.read()
-            verified = verify_messageRSA(sign_rsa_original_message_input,file_content ,public_key)
+            verified = verify_messageRSA(sign_rsa_original_message_input, file_content, public_key)
             if verified:
                 result = "Signature verified: Message has not been tampered with."
             else:
                 result = "Verification failed: Message has been tampered with."
             input_text.config(state="normal")
         else:
-            result=verify_fileRSA(filename, public_key)
+            result = verify_fileRSA(filename, public_key)
             file_opened = False
         output_text.config(state="normal")
         output_text.delete("1.0", END)
