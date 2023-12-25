@@ -1,11 +1,10 @@
-import base64
 from tkinter import *
 from tkinter import filedialog, messagebox
-from Cryptography import *
-from RSA import *
+import RSA as r
 from SHA512 import *
-from DES3 import *
+from Cryptography import *
 from ConfAuthSymAsy import *
+from DES3 import *
 
 root = Tk()
 
@@ -24,10 +23,14 @@ clicked.set("Choose Tool")
 public_key = StringVar()
 private_key = StringVar()
 
+file_opened = False
+
 
 # show appropriate buttons when an option is selected
 def on_selection(*args):
+    global file_opened
     if selected.get() == "AES (ECB)":
+        file_opened = False
         key_field.grid(row=1, column=0, columnspan=10, pady=10)
         aes_en_button.grid(row=7, column=0, padx=4)
         aes_dec_button.grid(row=7, column=2, padx=4)
@@ -43,6 +46,7 @@ def on_selection(*args):
         hash_button.grid_forget()
         input_text.config(state="normal")
     elif selected.get() == "AES (CBC)":
+        file_opened = False
         key_field.grid(row=1, column=0, columnspan=10, pady=10)
         aes_en_button.grid(row=7, column=0, padx=4)
         aes_dec_button.grid(row=7, column=2, padx=4)
@@ -58,6 +62,7 @@ def on_selection(*args):
         hash_button.grid_forget()
         input_text.config(state="normal")
     elif selected.get() == "RSA":
+        file_opened = False
         global public_key
         global private_key
         aes_en_button.grid_forget()
@@ -81,6 +86,7 @@ def on_selection(*args):
         with open("private.pem", "rb") as f:
             private_key = rsa.PrivateKey.load_pkcs1(f.read())
     elif selected.get() == "sha512":
+        file_opened = False
         hash_button.grid(row=1, column=0, padx=4, pady=5)
         key_field.grid_forget()
         aes_en_button.grid_forget()
@@ -96,6 +102,7 @@ def on_selection(*args):
         ca_dec_button.grid_forget()
         input_text.config(state="normal")
     elif selected.get() == "Confidentiality and Authentication":
+        file_opened = False
         ca_en_button.grid(row=7, column=0, padx=4)
         ca_dec_button.grid(row=7, column=2, padx=4)
         key_field.grid(row=1, column=0, columnspan=10, pady=10)
@@ -111,6 +118,7 @@ def on_selection(*args):
         hash_button.grid_forget()
         input_text.config(state="disabled")
     elif selected.get() == "Triple DES":
+        file_opened = False
         key_field.grid(row=1, column=0, columnspan=10, pady=10)
         des_en_button.grid(row=7, column=0, padx=4)
         des_dec_button.grid(row=7, column=2, padx=4)
@@ -291,16 +299,16 @@ def enc_rsa():
     global private_key
     global public_key
     global temp_input
-    if (selected.get() == "RSA") & file_opened:
+    if file_opened:
         filename = os.path.basename(filepath)
-        encrypt_fileRSA(filename, public_key)
+        r.encrypt_file_rsa(filename, public_key)
         out_filepath = find_file_recursive("encrypted_" + filename)
         output_text.config(state="normal")
         output_text.delete("1.0", END)
         output_text.insert(END, "Done - Filepath: " + out_filepath)
         output_text.config(state="disabled")
         file_opened = False
-    elif (selected.get() == "RSA") & (not file_opened):
+    elif not file_opened:
         plaintext = input_text.get("1.0", END).replace("\n", "")
         ciphertext = str(base64.b64encode(encrypt_messageRSA(plaintext, public_key)))
         ciphertext = ciphertext.replace("b'", "").replace("'", "")
@@ -315,7 +323,7 @@ def dec_rsa():
     global private_key
     global public_key
     global temp_input
-    if (selected.get() == "RSA") & file_opened:
+    if file_opened:
         filename = os.path.basename(filepath)
         decrypt_fileRSA(filename, private_key)
         out_filepath = find_file_recursive("decrypted_" + filename)
@@ -324,7 +332,7 @@ def dec_rsa():
         output_text.insert(END, "Done - Filepath: " + out_filepath)
         output_text.config(state="disabled")
         file_opened = False
-    elif (selected.get() == "RSA") & (not file_opened):
+    elif not file_opened:
         ciphertext = base64.b64decode(input_text.get("1.0", END).replace("\n", ""))
         plaintext = decrypt_messageRSA(ciphertext, private_key)
         output_text.config(state="normal")
@@ -342,7 +350,7 @@ def sign_rsa():
     global private_key
     global public_key
     global signed_message
-    if (selected.get() == "RSA") & file_opened:
+    if file_opened:
         filename = os.path.basename(filepath)
         sign_fileRSA(filename, private_key)
         out_filepath = find_file_recursive("signature_" + filename)
@@ -351,7 +359,7 @@ def sign_rsa():
         output_text.insert(END, "Done - Filepath: " + out_filepath)
         output_text.config(state="disabled")
         file_opened = False
-    elif (selected.get() == "RSA") & (not file_opened):
+    elif not file_opened:
         message = input_text.get("1.0", END).replace("\n", "")
         signed_message = sign_messageRSA(message, private_key)
         out_filepath = find_file_recursive("signature_msg.txt")
@@ -366,7 +374,7 @@ def verify_rsa():
     global private_key
     global public_key
     global signed_message
-    if (selected.get() == "RSA") & file_opened:
+    if  file_opened:
         filename = os.path.basename(filepath)
         result = verify_fileRSA(filename, public_key)
         output_text.config(state="normal")
@@ -374,7 +382,7 @@ def verify_rsa():
         output_text.insert(END, result)
         output_text.config(state="disabled")
         file_opened = False
-    elif (selected.get() == "RSA") & (not file_opened):
+    elif not file_opened:
         message = input_text.get("1.0", END).replace("\n", "")
         verified = verify_messageRSA(message, signed_message, public_key)
         if verified:
@@ -531,12 +539,12 @@ def dec_ca():
 
 
 # Conf. and Auth. buttons
-ca_en_button = Button(options_frame, text="ENCRYPT", pady=10, padx=20, width=22, command=enc_ca, bg="#780000",
+ca_en_button = Button(options_frame, text="SIGN", pady=10, padx=20, width=22, command=enc_ca, bg="#780000",
                       fg="#e9c46a")
 ca_en_button.grid(row=7, column=0, padx=4)
 ca_en_button.grid_forget()
 
-ca_dec_button = Button(options_frame, text="DECRYPT", pady=10, padx=20, width=22, command=dec_ca, bg="#780000",
+ca_dec_button = Button(options_frame, text="VERIFY", pady=10, padx=20, width=22, command=dec_ca, bg="#780000",
                        fg="#e9c46a")
 ca_dec_button.grid(row=7, column=2, padx=4)
 ca_dec_button.grid_forget()
@@ -568,7 +576,6 @@ def open_file():
             input_text.insert(END, file_content)
 
 
-file_opened = False
 file_button = Button(in_frame, text="Open File", command=open_file, width=57, bg="#780000", fg="#e9c46a")
 file_button.grid(row=1, column=0)
 

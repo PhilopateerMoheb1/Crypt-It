@@ -61,10 +61,10 @@ def ConfAuthHashVerifyAES(file_path, symKey, mode="ECB", IV=b"0000000000000000")
         print("File has been altered.")
         return "File has been altered."
 
-
-def main():
-    ConfAuthHashSignedAES("Test2.txt", b"PhiloPteer Mohebmmmmmmmmmmmmmmmm", "ECB")
-    ConfAuthHashVerifyAES("Test2.txt", b"PhiloPteer Mohebmmmmmmmmmmmmmmmm", "ECB")
-
-
-main()
+#
+# def main():
+#     ConfAuthHashSignedAES("Test2.txt", b"PhiloPteer Mohebmmmmmmmmmmmmmmmm", "ECB")
+#     ConfAuthHashVerifyAES("Test2.txt", b"PhiloPteer Mohebmmmmmmmmmmmmmmmm", "ECB")
+#
+#
+# main()
