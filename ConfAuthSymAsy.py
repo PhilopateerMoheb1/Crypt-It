@@ -42,6 +42,8 @@ def ConfAuthHashVerifyAES(file_path, symKey, mode="ECB", IV=b"0000000000000000")
         concatenated_data = file.read()
     # Split the data into file content and hash
     file_content, hash_separator, fileHashSignedEncrypted = concatenated_data.rpartition(b"\nEncrypted Hash:")
+    with open("AfterConfAndAuth"+file_path, "wb") as output_file:
+        output_file.write(file_content)
     with open(file_path, "wb") as output_file:
         output_file.write(file_content)
 
