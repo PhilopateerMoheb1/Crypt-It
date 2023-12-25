@@ -1,11 +1,10 @@
-import base64
 from tkinter import *
-from tkinter import filedialog
-from Cryptography import *
-from RSA import *
+from tkinter import filedialog, messagebox
+import RSA as r
 from SHA512 import *
-from DES3 import *
+from Cryptography import *
 from ConfAuthSymAsy import *
+from DES3 import *
 
 root = Tk()
 
@@ -24,10 +23,14 @@ clicked.set("Choose Tool")
 public_key = StringVar()
 private_key = StringVar()
 
+file_opened = False
+
 
 # show appropriate buttons when an option is selected
 def on_selection(*args):
+    global file_opened
     if selected.get() == "AES (ECB)":
+        file_opened = False
         key_field.grid(row=1, column=0, columnspan=10, pady=10)
         aes_en_button.grid(row=7, column=0, padx=4)
         aes_dec_button.grid(row=7, column=2, padx=4)
@@ -41,7 +44,9 @@ def on_selection(*args):
         ca_en_button.grid_forget()
         ca_dec_button.grid_forget()
         hash_button.grid_forget()
+        input_text.config(state="normal")
     elif selected.get() == "AES (CBC)":
+        file_opened = False
         key_field.grid(row=1, column=0, columnspan=10, pady=10)
         aes_en_button.grid(row=7, column=0, padx=4)
         aes_dec_button.grid(row=7, column=2, padx=4)
@@ -55,7 +60,9 @@ def on_selection(*args):
         ca_en_button.grid_forget()
         ca_dec_button.grid_forget()
         hash_button.grid_forget()
+        input_text.config(state="normal")
     elif selected.get() == "RSA":
+        file_opened = False
         global public_key
         global private_key
         aes_en_button.grid_forget()
@@ -67,6 +74,7 @@ def on_selection(*args):
         ca_en_button.grid_forget()
         ca_dec_button.grid_forget()
         hash_button.grid_forget()
+        input_text.config(state="normal")
         rsa_enc_button.grid(row=1, column=0, padx=4, pady=5)
         rsa_dec_button.grid(row=1, column=1, padx=4, pady=5)
         rsa_sign_button.grid(row=2, column=0, padx=4, pady=5)
@@ -78,6 +86,7 @@ def on_selection(*args):
         with open("private.pem", "rb") as f:
             private_key = rsa.PrivateKey.load_pkcs1(f.read())
     elif selected.get() == "sha512":
+        file_opened = False
         hash_button.grid(row=1, column=0, padx=4, pady=5)
         key_field.grid_forget()
         aes_en_button.grid_forget()
@@ -91,7 +100,9 @@ def on_selection(*args):
         des_dec_button.grid_forget()
         ca_en_button.grid_forget()
         ca_dec_button.grid_forget()
+        input_text.config(state="normal")
     elif selected.get() == "Confidentiality and Authentication":
+        file_opened = False
         ca_en_button.grid(row=7, column=0, padx=4)
         ca_dec_button.grid(row=7, column=2, padx=4)
         key_field.grid(row=1, column=0, columnspan=10, pady=10)
@@ -105,7 +116,9 @@ def on_selection(*args):
         des_en_button.grid_forget()
         des_dec_button.grid_forget()
         hash_button.grid_forget()
+        input_text.config(state="disabled")
     elif selected.get() == "Triple DES":
+        file_opened = False
         key_field.grid(row=1, column=0, columnspan=10, pady=10)
         des_en_button.grid(row=7, column=0, padx=4)
         des_dec_button.grid(row=7, column=2, padx=4)
@@ -119,6 +132,7 @@ def on_selection(*args):
         ca_en_button.grid_forget()
         ca_dec_button.grid_forget()
         hash_button.grid_forget()
+        input_text.config(state="normal")
 
 
 selected = StringVar(root)
@@ -152,7 +166,10 @@ def en_aes():
     if (selected.get() == "AES (ECB)") & (not file_opened):
         plaintext = input_text.get("1.0", END).replace("\n", "")
         key = key_field.get("1.0", END).replace("\n", "")
-        ciphertext = str(base64.b64encode(encryptAESText(plaintext.encode(), key.encode())))
+        try:
+            ciphertext = str(base64.b64encode(encryptAESText(plaintext.encode(), key.encode())))
+        except KeyError:
+            messagebox.showerror("Error", "Key must have a fixed size [16,24,32]")
         ciphertext = ciphertext.replace("b'", "").replace("'", "")
         output_text.config(state="normal")
         output_text.delete("1.0", END)
@@ -162,7 +179,12 @@ def en_aes():
         plaintext = input_text.get("1.0", END).replace("\n", "")
         key = key_field.get("1.0", END).replace("\n", "")
         iv = iv_field.get("1.0", END).replace("\n", "")
-        ciphertext = str(base64.b64encode(encryptAESText(plaintext.encode(), key.encode(), "CBC", iv.encode())))
+        try:
+            ciphertext = str(base64.b64encode(encryptAESText(plaintext.encode(), key.encode(), "CBC", iv.encode())))
+        except KeyError:
+            messagebox.showerror("Error", "Key must have a fixed size [16,24,32]")
+        except IVError:
+            messagebox.showerror("Error", "IV must be 16 bytes long")
         ciphertext = ciphertext.replace("b'", "").replace("'", "")
         output_text.config(state="normal")
         output_text.delete("1.0", END)
@@ -171,7 +193,10 @@ def en_aes():
     elif (selected.get() == "AES (ECB)") & file_opened:
         filename = os.path.basename(filepath)
         key = key_field.get("1.0", END).replace("\n", "")
-        OutputFileName= encryptAESFile(filename, key.encode())
+        try:
+            OutputFileName= encryptAESFile(filename, key.encode())
+        except KeyError:
+            messagebox.showerror("Error", "Key must have a fixed size [16,24,32]")
         out_filepath = find_file_recursive(OutputFileName)
         output_text.config(state="normal")
         output_text.delete("1.0", END)
@@ -196,7 +221,10 @@ def dec_aes():
     if (selected.get() == "AES (ECB)") & (not file_opened):
         ciphertext = base64.b64decode(input_text.get("1.0", END).replace("\n", ""))
         key = key_field.get("1.0", END).replace("\n", "")
-        plaintext = decryptAESText(ciphertext, key.encode())
+        try:
+            plaintext = decryptAESText(ciphertext, key.encode())
+        except KeyError:
+            messagebox.showerror("Error", "Key must have a fixed size [16,24,32]")
         output_text.config(state="normal")
         output_text.delete("1.0", END)
         output_text.insert(END, plaintext)
@@ -205,7 +233,12 @@ def dec_aes():
         ciphertext = base64.b64decode(input_text.get("1.0", END).replace("\n", ""))
         key = key_field.get("1.0", END).replace("\n", "")
         iv = iv_field.get("1.0", END).replace("\n", "")
-        plaintext = decryptAESText(ciphertext, key.encode(), "CBC", iv.encode())
+        try:
+            plaintext = decryptAESText(ciphertext, key.encode(), "CBC", iv.encode())
+        except KeyError:
+            messagebox.showerror("Error", "Key must have a fixed size [16,24,32]")
+        except IVError:
+            messagebox.showerror("Error", "IV must be 16 bytes long")
         output_text.config(state="normal")
         output_text.delete("1.0", END)
         output_text.insert(END, plaintext)
@@ -213,8 +246,8 @@ def dec_aes():
     elif (selected.get() == "AES (ECB)") & file_opened:
         filename = os.path.basename(filepath)
         key = key_field.get("1.0", END).replace("\n", "")
-        outputFileName=decryptAESFile(filename, key.encode())
-        out_filepath = find_file_recursive(outputFileName)
+        decryptAESFile(filename, key.encode())
+        out_filepath = find_file_recursive("(dec)" + filename)
         output_text.config(state="normal")
         output_text.delete("1.0", END)
         output_text.insert(END, "Done - Filepath: " + out_filepath)
@@ -253,16 +286,16 @@ def enc_rsa():
     global private_key
     global public_key
     global temp_input
-    if (selected.get() == "RSA") & file_opened:
+    if file_opened:
         filename = os.path.basename(filepath)
-        encrypt_fileRSA(filename, public_key)
+        r.encrypt_file_rsa(filename, public_key)
         out_filepath = find_file_recursive("encrypted_" + filename)
         output_text.config(state="normal")
         output_text.delete("1.0", END)
         output_text.insert(END, "Done - Filepath: " + out_filepath)
         output_text.config(state="disabled")
         file_opened = False
-    elif (selected.get() == "RSA") & (not file_opened):
+    elif not file_opened:
         plaintext = input_text.get("1.0", END).replace("\n", "")
         ciphertext = str(base64.b64encode(encrypt_messageRSA(plaintext, public_key)))
         ciphertext = ciphertext.replace("b'", "").replace("'", "")
@@ -277,7 +310,7 @@ def dec_rsa():
     global private_key
     global public_key
     global temp_input
-    if (selected.get() == "RSA") & file_opened:
+    if file_opened:
         filename = os.path.basename(filepath)
         decrypt_fileRSA(filename, private_key)
         out_filepath = find_file_recursive("decrypted_" + filename)
@@ -286,7 +319,7 @@ def dec_rsa():
         output_text.insert(END, "Done - Filepath: " + out_filepath)
         output_text.config(state="disabled")
         file_opened = False
-    elif (selected.get() == "RSA") & (not file_opened):
+    elif not file_opened:
         ciphertext = base64.b64decode(input_text.get("1.0", END).replace("\n", ""))
         plaintext = decrypt_messageRSA(ciphertext, private_key)
         output_text.config(state="normal")
@@ -330,7 +363,6 @@ def verify_rsa():
     global private_key
     global public_key
     global signed_message
-    global sign_rsa_original_message_input
     if (selected.get() == "RSA") & file_opened:
         filename = os.path.basename(filepath)
         if(len(sign_rsa_original_message_input)!=0):
@@ -478,7 +510,10 @@ def enc_ca():
     global file_opened
     filename = os.path.basename(filepath)
     key = key_field.get("1.0", END).replace("\n", "")
-    ConfAuthHashSignedAES(filename, key.encode(), "ECB")
+    try:
+        ConfAuthHashSignedAES(filename, key.encode(), "ECB")
+    except KeyError:
+        messagebox.showerror("Error", "Key must have a fixed size [16,24,32]")
     out_filepath = find_file_recursive("(enc)(Conc)" + filename)
     output_text.config(state="normal")
     output_text.delete("1.0", END)
@@ -491,7 +526,10 @@ def dec_ca():
     global file_opened
     filename = os.path.basename(filepath)
     key = key_field.get("1.0", END).replace("\n", "")
-    result = ConfAuthHashVerifyAES(filename, key.encode(), "ECB")
+    try:
+        result = ConfAuthHashVerifyAES(filename, key.encode(), "ECB")
+    except KeyError:
+        messagebox.showerror("Error", "Key must have a fixed size [16,24,32]")
     output_text.config(state="normal")
     output_text.delete("1.0", END)
     output_text.insert(END, result)
@@ -500,12 +538,12 @@ def dec_ca():
 
 
 # Conf. and Auth. buttons
-ca_en_button = Button(options_frame, text="ENCRYPT", pady=10, padx=20, width=22, command=enc_ca, bg="#780000",
+ca_en_button = Button(options_frame, text="SIGN", pady=10, padx=20, width=22, command=enc_ca, bg="#780000",
                       fg="#e9c46a")
 ca_en_button.grid(row=7, column=0, padx=4)
 ca_en_button.grid_forget()
 
-ca_dec_button = Button(options_frame, text="DECRYPT", pady=10, padx=20, width=22, command=dec_ca, bg="#780000",
+ca_dec_button = Button(options_frame, text="VERIFY", pady=10, padx=20, width=22, command=dec_ca, bg="#780000",
                        fg="#e9c46a")
 ca_dec_button.grid(row=7, column=2, padx=4)
 ca_dec_button.grid_forget()
@@ -537,7 +575,6 @@ def open_file():
             input_text.insert(END, file_content)
 
 
-file_opened = False
 file_button = Button(in_frame, text="Open File", command=open_file, width=57, bg="#780000", fg="#e9c46a")
 file_button.grid(row=1, column=0)
 

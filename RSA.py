@@ -22,7 +22,7 @@ def encrypt_messageRSA(message, public_key):
     return encrypted_message
 
 
-def encrypt_fileRSA(file_name, public_key):
+def encrypt_file_rsa(file_name, public_key):
     with open(file_name, 'rb') as f:
         file_content = f.read()
         encrypted_content = rsa.encrypt(file_content, public_key)
@@ -99,7 +99,7 @@ def main():
                 print(f"Encrypted message: {encrypted_msg}")
             elif (choice == "F"):
                 file_name = input("Enter file name to encrypt: ")
-                encrypt_fileRSA(file_name, public_key)
+                encrypt_file_rsa(file_name, public_key)
                 print("File encrypted successfully.")
         elif choice == 'D':
             choice = input("Text(T) or File(F) to decrypt: ")
