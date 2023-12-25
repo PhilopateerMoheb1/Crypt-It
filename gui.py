@@ -246,8 +246,8 @@ def dec_aes():
     elif (selected.get() == "AES (ECB)") & file_opened:
         filename = os.path.basename(filepath)
         key = key_field.get("1.0", END).replace("\n", "")
-        decryptAESFile(filename, key.encode())
-        out_filepath = find_file_recursive("(dec)" + filename)
+        OutputFileName=decryptAESFile(filename, key.encode())
+        out_filepath = find_file_recursive(OutputFileName)
         output_text.config(state="normal")
         output_text.delete("1.0", END)
         output_text.insert(END, "Done - Filepath: " + out_filepath)
