@@ -31,6 +31,8 @@ def ConfAuthHashSignedAES(file_path, symKey, mode="ECB", IV=b"0000000000000000")
 
 
 def ConfAuthHashVerifyAES(file_path, symKey, mode="ECB", IV=b"0000000000000000"):
+    
+    file_path = file_path.replace("(enc)(Conc)", "")
     if (mode == "ECB"):
         decryptAESFile("(enc)(Conc)" + file_path, symKey, mode)
     elif (mode == "CBC"):

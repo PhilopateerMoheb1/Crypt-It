@@ -66,9 +66,11 @@ def verify_messageRSA(message, signature, public_key):
 
 
 def verify_fileRSA(file_name, public_key):
-    with open(file_name, 'rb') as f:
+    # Replace "signature_" with an empty string
+    new_filename = file_name.replace("signature_", "")
+    with open(new_filename, 'rb') as f:
         file_content = f.read()
-    with open("signature_" + file_name, 'rb') as f:
+    with open("signature_" + new_filename, 'rb') as f:
         signature = f.read()
     try:
         rsa.verify(file_content, signature, public_key)

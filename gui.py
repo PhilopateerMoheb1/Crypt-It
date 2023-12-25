@@ -171,8 +171,8 @@ def en_aes():
     elif (selected.get() == "AES (ECB)") & file_opened:
         filename = os.path.basename(filepath)
         key = key_field.get("1.0", END).replace("\n", "")
-        encryptAESFile(filename, key.encode())
-        out_filepath = find_file_recursive("(enc)" + filename)
+        OutputFileName= encryptAESFile(filename, key.encode())
+        out_filepath = find_file_recursive(OutputFileName)
         output_text.config(state="normal")
         output_text.delete("1.0", END)
         output_text.insert(END, "Done - Filepath: " + out_filepath)
@@ -182,8 +182,8 @@ def en_aes():
         filename = os.path.basename(filepath)
         key = key_field.get("1.0", END).replace("\n", "")
         iv = iv_field.get("1.0", END).replace("\n", "")
-        encryptAESFile(filename, key.encode(), "CBC", iv.encode())
-        out_filepath = find_file_recursive("(enc)" + filename)
+        OutputFileName=encryptAESFile(filename, key.encode(), "CBC", iv.encode())
+        out_filepath = find_file_recursive(OutputFileName)
         output_text.config(state="normal")
         output_text.delete("1.0", END)
         output_text.insert(END, "Done - Filepath: " + out_filepath)
@@ -213,8 +213,8 @@ def dec_aes():
     elif (selected.get() == "AES (ECB)") & file_opened:
         filename = os.path.basename(filepath)
         key = key_field.get("1.0", END).replace("\n", "")
-        decryptAESFile(filename, key.encode())
-        out_filepath = find_file_recursive("(dec)" + filename)
+        outputFileName=decryptAESFile(filename, key.encode())
+        out_filepath = find_file_recursive(outputFileName)
         output_text.config(state="normal")
         output_text.delete("1.0", END)
         output_text.insert(END, "Done - Filepath: " + out_filepath)
@@ -224,8 +224,8 @@ def dec_aes():
         filename = os.path.basename(filepath)
         key = key_field.get("1.0", END).replace("\n", "")
         iv = iv_field.get("1.0", END).replace("\n", "")
-        decryptAESFile(filename, key.encode(), "CBC", iv.encode())
-        out_filepath = find_file_recursive("(dec)" + filename.replace("(enc)", ""))
+        outputFileName= decryptAESFile(filename, key.encode(), "CBC", iv.encode())
+        out_filepath = find_file_recursive(outputFileName)
         output_text.config(state="normal")
         output_text.delete("1.0", END)
         output_text.insert(END, "Done - Filepath: " + out_filepath)
@@ -304,6 +304,8 @@ def sign_rsa():
     global private_key
     global public_key
     global signed_message
+    global sign_rsa_original_message_input
+    sign_rsa_original_message_input=""
     if (selected.get() == "RSA") & file_opened:
         filename = os.path.basename(filepath)
         sign_fileRSA(filename, private_key)
@@ -314,8 +316,8 @@ def sign_rsa():
         output_text.config(state="disabled")
         file_opened = False
     elif (selected.get() == "RSA") & (not file_opened):
-        message = input_text.get("1.0", END).replace("\n", "")
-        signed_message = sign_messageRSA(message, private_key)
+        sign_rsa_original_message_input = input_text.get("1.0", END).replace("\n", "")
+        signed_message = sign_messageRSA(sign_rsa_original_message_input, private_key)
         out_filepath = find_file_recursive("signature_msg.txt")
         output_text.config(state="normal")
         output_text.delete("1.0", END)
@@ -328,14 +330,25 @@ def verify_rsa():
     global private_key
     global public_key
     global signed_message
+    global sign_rsa_original_message_input
     if (selected.get() == "RSA") & file_opened:
         filename = os.path.basename(filepath)
-        result = verify_fileRSA(filename, public_key)
+        if(len(sign_rsa_original_message_input)!=0):
+            with open(filename, 'rb') as f:
+                file_content = f.read()
+            verified = verify_messageRSA(sign_rsa_original_message_input,file_content ,public_key)
+            if verified:
+                result = "Signature verified: Message has not been tampered with."
+            else:
+                result = "Verification failed: Message has been tampered with."
+            input_text.config(state="normal")
+        else:
+            result=verify_fileRSA(filename, public_key)
+            file_opened = False
         output_text.config(state="normal")
         output_text.delete("1.0", END)
         output_text.insert(END, result)
         output_text.config(state="disabled")
-        file_opened = False
     elif (selected.get() == "RSA") & (not file_opened):
         message = input_text.get("1.0", END).replace("\n", "")
         verified = verify_messageRSA(message, signed_message, public_key)
@@ -518,7 +531,7 @@ def open_file():
     if filepath:
         global file_opened
         file_opened = True
-        with open(filepath, 'r') as file:
+        with open(filepath, 'rb') as file:
             file_content = file.read()
             input_text.delete("1.0", END)
             input_text.insert(END, file_content)
