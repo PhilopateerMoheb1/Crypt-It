@@ -377,10 +377,10 @@ def verify_rsa():
         else:
             result=verify_fileRSA(filename, public_key)
             file_opened = False
-        output_text.config(state="normal")
-        output_text.delete("1.0", END)
-        output_text.insert(END, result)
-        output_text.config(state="disabled")
+            output_text.config(state="normal")
+            output_text.delete("1.0", END)
+            output_text.insert(END, result)
+            output_text.config(state="disabled")
     elif (selected.get() == "RSA") & (not file_opened):
         message = input_text.get("1.0", END).replace("\n", "")
         verified = verify_messageRSA(message, signed_message, public_key)
@@ -388,11 +388,11 @@ def verify_rsa():
             result = "Signature verified: Message has not been tampered with."
         else:
             result = "Verification failed: Message has been tampered with."
-        output_text.config(state="normal")
-        output_text.delete("1.0", END)
-        output_text.insert(END, result)
-        output_text.config(state="disabled")
-        input_text.config(state="normal")
+            output_text.config(state="normal")
+            output_text.delete("1.0", END)
+            output_text.insert(END, result)
+            output_text.config(state="disabled")
+            input_text.config(state="normal")
 
 
 # RSA Buttons
@@ -571,6 +571,7 @@ def open_file():
         file_opened = True
         with open(filepath, 'rb') as file:
             file_content = file.read()
+            input_text.config(state="normal")
             input_text.delete("1.0", END)
             input_text.insert(END, file_content)
 
